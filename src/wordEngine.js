@@ -1,113 +1,121 @@
-// Massive Dictionary & Word Generation Engine
-// Categorized by Beginner, Intermediate, Advanced, Expert
-// Covers keyboard spread, tricky bigrams, tech terminology, and sentences.
-
-export const WORD_COLLECTIONS = {
+// Thai & English Word Dictionaries & Shuffled Deck Engine
+export const THAI_WORDS = {
   beginner: [
-    'cat', 'tree', 'magic', 'neon', 'fire', 'dark', 'void', 'code', 'cyber', 'star',
-    'bolt', 'glow', 'run', 'fast', 'jump', 'cast', 'ring', 'mana', 'flux', 'blade',
-    'aura', 'core', 'chip', 'grid', 'byte', 'spark', 'beam', 'data', 'rune', 'link',
-    'wave', 'echo', 'node', 'dash', 'sync', 'hack', 'dust', 'iron', 'gate', 'lock',
-    'mask', 'root', 'path', 'helm', 'wind', 'mist', 'orb', 'sign', 'claw', 'fang',
-    'wing', 'tail', 'burn', 'acid', 'cold', 'heat', 'rift', 'soul', 'mind', 'veil',
-    'apex', 'edge', 'flow', 'haze', 'lens', 'mark', 'mesh', 'neon', 'pack', 'pulse',
-    'scan', 'slot', 'spun', 'tide', 'unit', 'volt', 'warp', 'wire', 'zone', 'zoom',
-    'arch', 'beam', 'cite', 'dock', 'font', 'glow', 'halo', 'icon', 'jack', 'loop'
+    'ดาว', 'แสง', 'ดาบ', 'เวท', 'ไฟ', 'น้ำ', 'ลม', 'ดิน', 'ฟ้า', 'พลัง',
+    'จิต', 'มนต์', 'ค่าย', 'ศร', 'เกราะ', 'เงา', 'กาย', 'มิติ', 'แก้ว', 'ศูนย์',
+    'จักร', 'ยันต์', 'จิต', 'ตา', 'หิน', 'ทอง', 'เงิน', 'เหล็ก', 'พิษ', 'สาย',
+    'วิญญาณ', 'ประตู', 'ขุม', 'คลัง', 'รหัส', 'ฐาน', 'กล่อง', 'เข็ม', 'แกน', 'วง'
   ],
-
   intermediate: [
-    'planet', 'battle', 'crystal', 'energy', 'shield', 'plasma', 'rocket', 'vector',
-    'glitch', 'chrono', 'portal', 'matrix', 'knight', 'hunter', 'beacon', 'weapon',
-    'shadow', 'strike', 'cyborg', 'circuit', 'stellar', 'galaxy', 'meteor', 'sorcery',
-    'enchant', 'barrier', 'phantom', 'laser', 'cipher', 'hacker', 'protocol', 'terminal',
-    'synthetic', 'android', 'quantum', 'spectral', 'dynamo', 'overload', 'disrupt', 'entropy',
-    'gravity', 'neutron', 'vortex', 'holonet', 'firewall', 'subroutine', 'algorithm', 'teleport',
-    'paralyze', 'catalyst', 'nanite', 'radiance', 'titanium', 'obsidian', 'astral', 'sentinel',
-    'hyperion', 'valkyrie', 'firmware', 'infinite', 'frequency', 'pulsar', 'singularity', 'ionize',
-    'subspace', 'cybernet', 'silicon', 'dimension', 'particle', 'magnetic', 'elemental', 'reactive',
-    'cascade', 'feedback', 'junction', 'kinetics', 'manifest', 'mutation', 'navigate', 'optimize',
-    'phantom', 'polarity', 'protocol', 'quantum', 'radiation', 'resonance', 'spectrum', 'velocity'
+    'เวทมนตร์', 'สายฟ้า', 'อัคคี', 'วารี', 'เกราะเหล็ก', 'ดาบแสง', 'คริสตัล', 'พลังงาน',
+    'ป้อมปราการ', 'มิติลี้ลับ', 'วิญญาณแค้น', 'สัตว์ประหลาด', 'อสูรโบราณ', 'หุ่นยนต์',
+    'กลไกไซเบอร์', 'วงจรไฟฟ้า', 'ดาวเคราะห์', 'ระบบสุริยะ', 'ความว่างเปล่า', 'ระเบิดพลาสม่า',
+    'การโจมตี', 'การป้องกัน', 'การหลบหลีก', 'ความเร็วแสง', 'คลื่นความถี่', 'อนุภาคควอนตัม',
+    'สนามแม่เหล็ก', 'ลำแสงเลเซอร์', 'รหัสพันธุกรรม', 'เครื่องจักรกล'
   ],
-
   advanced: [
-    'technology', 'interstellar', 'technomancer', 'singularity', 'nanotechnology',
-    'quantumburst', 'teleportation', 'superconductor', 'electromagnetic', 'gravitational',
-    'cybernetic', 'overclocking', 'astrophysics', 'hyperspace', 'multiverse',
-    'bioluminescence', 'metamorphosis', 'crystallization', 'decompilation', 'cryptography',
-    'thermodynamics', 'photosynthesis', 'superposition', 'bioinformatics', 'neuroplasticity',
-    'synchronization', 'hyperdimensional', 'electrochemical', 'semiconductor', 'reconfiguration',
-    'transcendence', 'omnidirectional', 'photolithography', 'recalibration', 'countermeasure',
-    'crystallography', 'telepathically', 'microprocessor', 'biomechanical', 'superluminal',
-    'interconnection', 'parallelization', 'electrodynamics', 'perpendicular', 'hydrodynamic',
-    'stratosphere', 'photosensitive', 'electromotive', 'macromolecule', 'biomolecular'
+    'จักรวาลคู่ขนาน', 'มิติแห่งความว่างเปล่า', 'มหาเวทโบราณกาล', 'อสูรสงครามอวกาศ',
+    'เครื่องปฏิกรณ์พลังงานนิวเคลียร์', 'เทคโนโลยีชีวภาพขั้นสูง', 'การเหนี่ยวนำแม่เหล็กไฟฟ้า',
+    'ทฤษฎีควอนตัมสัมพัทธภาพ', 'ระบบโครงข่ายประสาทเทียม', 'ซูเปอร์คอมพิวเตอร์ควอนตัม',
+    'การสลายตัวของสสารมืด', 'รังสีคอสมิกพลังงานสูง', 'อนุภาคประจุลบความเร็วสูง'
   ],
-
   expert: [
-    'every keystroke is an ancient spell woven in starlight',
-    'the digital mainframe whispers forgotten cybernetic incantations',
-    'we channel plasma fire through the quantum singularity',
-    'overclock your mind to shatter the incoming firewall',
-    'precision and speed harmonize to awaken cosmic power',
-    'the future belongs to those who master the rhythmic code',
-    'arcane matrices align with cybernetic neural processors',
-    'sublight thrusters propel our void ship beyond the event horizon',
-    'dark matter resonates within the consecrated titanium circle',
-    'synchronized keystrokes unleash overwhelming tachyon cascades',
-    'only true keyboard sorcerers survive the neon singularity',
-    'harness the infinite frequencies of the electromagnetic void',
-    'decode the subterranean mainframe before the security lockdown',
-    'channel pure starlight through crystallized plasma conduits',
-    'unleash the quantum burst to vaporize rogue alien drones'
+    'พลังแห่งมนตราโบราณถูกปลุกขึ้นจากห้วงลึกแห่งอวกาศ',
+    'จังหวะการพิมพ์ผสานเป็นหนึ่งเดียวกับคลื่นพลังงานเวท',
+    'ปลดปล่อยพลังงานพลาสม่าเพื่อทำลายสนามพลังของศัตรู',
+    'การเคลื่อนย้ายผ่านรูหนอนด้วยความเร็วเหนือแสง',
+    'เมื่อรหัสลับแห่งจักรวาลถูกถอดออก พลังอันไร้ขีดจำกัดจึงตื่นขึ้น',
+    'ประสานจิตเข้ากับแกนกลางเครื่องจักรกลสังหารแห่งอนาคต'
   ]
 };
 
-// Shuffled Non-repeating Word Generator
-export class WordDeck {
-  constructor(tier = 'beginner', adaptiveKeys = []) {
+export const ENGLISH_WORDS = {
+  beginner: [
+    'claw', 'shadow', 'crystal', 'quantum', 'strike', 'blade', 'spark', 'flare',
+    'pulse', 'cyber', 'void', 'nexus', 'flame', 'frost', 'abyss', 'venom',
+    'laser', 'shield', 'armor', 'titan', 'beast', 'demon', 'golem', 'wraith',
+    'drone', 'spark', 'bolt', 'phase', 'hyper', 'matrix', 'rune', 'force'
+  ],
+  intermediate: [
+    'lightning', 'plasma', 'singularity', 'corrupted', 'overclock', 'dimension',
+    'parasite', 'valkyrie', 'sentinel', 'overlord', 'supernova', 'radiation',
+    'subroutine', 'algorithm', 'teleport', 'resonance', 'annihilate', 'cataclysm',
+    'cybernetic', 'molecular', 'nanotech', 'frequency', 'gravitation', 'hyperdrive'
+  ],
+  advanced: [
+    'electromagnetic', 'hyperdimensional', 'superconductor', 'bioluminescence',
+    'decentralization', 'reconfiguration', 'photolithography', 'thermodynamic',
+    'astrophysics', 'metamorphosis', 'crystallography', 'interconnection'
+  ],
+  expert: [
+    'ancient guardian awakens beneath the crystal moon',
+    'every keystroke channels arcane electricity through cyber conduits',
+    'we tear open dimensional rifts to shatter rogue alien titans',
+    'precision and velocity ignite supernova incinerations upon incoming demons'
+  ]
+};
+
+// Shuffled Non-repeating Sequence Generator
+export class SequenceDeck {
+  constructor(langMode = 'en', tier = 'beginner') {
+    this.langMode = langMode; // 'en' | 'th' | 'mix'
     this.tier = tier;
-    this.adaptiveKeys = adaptiveKeys;
-    this.deck = [];
     this.history = new Set();
-    this.refill();
   }
 
-  refill() {
-    let source = [...(WORD_COLLECTIONS[this.tier] || WORD_COLLECTIONS.beginner)];
+  getWordPool() {
+    let pool = [];
+    if (this.langMode === 'en') {
+      pool = [...(ENGLISH_WORDS[this.tier] || ENGLISH_WORDS.beginner)];
+    } else if (this.langMode === 'th') {
+      pool = [...(THAI_WORDS[this.tier] || THAI_WORDS.beginner)];
+    } else {
+      // Mixed Thai + English
+      const en = ENGLISH_WORDS[this.tier] || ENGLISH_WORDS.beginner;
+      const th = THAI_WORDS[this.tier] || THAI_WORDS.beginner;
+      pool = [...en, ...th];
+    }
+    return pool;
+  }
 
-    // Adaptive boost: duplicate words containing difficult keys
-    if (this.adaptiveKeys && this.adaptiveKeys.length > 0) {
-      const targeted = source.filter(w => 
-        this.adaptiveKeys.some(k => w.toLowerCase().includes(k.toLowerCase()))
-      );
-      if (targeted.length > 0) {
-        source = [...source, ...targeted, ...targeted];
+  // Generates a sequence of N words for typing combo
+  generateSequence(difficulty = 'easy', isBoss = false) {
+    let count = 4;
+    if (isBoss) {
+      count = difficulty === 'hard' ? 10 : (difficulty === 'normal' ? 8 : 6);
+    } else {
+      if (difficulty === 'easy') count = 4;
+      else if (difficulty === 'normal') count = 6;
+      else if (difficulty === 'hard') count = 8;
+    }
+
+    const pool = this.getWordPool();
+    // Shuffle pool
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    
+    // Pick words avoiding immediate history
+    const sequence = [];
+    for (let w of shuffled) {
+      if (!this.history.has(w)) {
+        sequence.push(w);
+        this.history.add(w);
+      }
+      if (sequence.length >= count) break;
+    }
+
+    // Refill if needed
+    if (sequence.length < count) {
+      this.history.clear();
+      for (let w of shuffled) {
+        if (!sequence.includes(w)) sequence.push(w);
+        if (sequence.length >= count) break;
       }
     }
 
-    // Fisher-Yates Shuffle
-    for (let i = source.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [source[i], source[j]] = [source[j], source[i]];
-    }
-
-    // Filter out very recently used words to prevent immediate repeats
-    this.deck = source.filter(w => !this.history.has(w));
-    if (this.deck.length < 5) {
+    if (this.history.size > 40) {
       this.history.clear();
-      this.deck = source;
     }
-  }
 
-  nextWord() {
-    if (this.deck.length === 0) {
-      this.refill();
-    }
-    const word = this.deck.pop();
-    this.history.add(word);
-    if (this.history.size > 25) {
-      const first = this.history.values().next().value;
-      this.history.delete(first);
-    }
-    return word;
+    return sequence;
   }
 }

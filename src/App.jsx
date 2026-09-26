@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Swords, Shield, Zap, Trophy, Users, BarChart3, 
   Map, Sparkles, Volume2, VolumeX, BookOpen, 
-  Award, LogIn, LogOut, CheckCircle, Copy, UserPlus, Play
+  Award, LogIn, LogOut, Copy, Play, Globe, Settings as SettingsIcon
 } from 'lucide-react';
 import { soundManager } from './sound';
 import confetti from 'canvas-confetti';
@@ -11,23 +11,30 @@ import confetti from 'canvas-confetti';
 import { 
   CHARACTER_CLASSES, WORLDS, INITIAL_DAILY_MISSIONS, INITIAL_LEADERBOARD 
 } from './gameData';
-import { WordDeck, WORD_COLLECTIONS } from './wordEngine';
+import { SequenceDeck } from './wordEngine';
+import { TRANSLATIONS } from './locales';
+import { MonsterIllustration } from './MonsterArt';
 import { 
   auth, db, googleProvider, signInWithPopup, fbSignOut, onAuthStateChanged,
-  doc, setDoc, getDoc, updateDoc
+  doc, setDoc, getDoc
 } from './firebase';
 
 export default function App() {
-  // Navigation tabs: 'home' | 'choose-hero' | 'battle' | 'worlds' | 'multiplayer' | 'training' | 'leaderboard' | 'stats' | 'missions'
+  // Navigation tabs: 'home' | 'choose-hero' | 'battle' | 'worlds' | 'multiplayer' | 'training' | 'leaderboard' | 'stats' | 'missions' | 'settings'
   const [activeTab, setActiveTab] = useState('home');
+
+  // Language & Typing Mode Preferences (Saved to LocalStorage / Firebase)
+  const [lang, setLang] = useState(() => localStorage.getItem('cyberspell_lang') || 'th');
+  const [typingMode, setTypingMode] = useState(() => localStorage.getItem('cyberspell_typing_mode') || 'en'); // 'en' | 'th' | 'mix'
+
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
 
   // Firebase Auth State
   const [firebaseUser, setFirebaseUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
   // Player State
   const [player, setPlayer] = useState(() => {
-    const saved = localStorage.getItem('cyberspell_player_v2');
+    const saved = localStorage.getItem('cyberspell_player_v3');
     if (saved) {
       try { return JSON.parse(saved); } catch(e){}
     }
@@ -68,29 +75,35 @@ export default function App() {
 
   // Daily Missions
   const [missions, setMissions] = useState(() => {
-    const saved = localStorage.getItem('cyberspell_missions_v2');
+    const saved = localStorage.getItem('cyberspell_missions_v3');
     return saved ? JSON.parse(saved) : INITIAL_DAILY_MISSIONS;
   });
 
   // World & Mode Configuration
   const [currentWorld, setCurrentWorld] = useState(WORLDS[0]);
-  const [battleMode, setBattleMode] = useState('solo'); // 'solo' | 'race' | 'coop' | 'pvp'
+  const [battleMode, setBattleMode] = useState('solo');
   const [currentLobbyRoom, setCurrentLobbyRoom] = useState(null);
+
+  // Sync Language & Mode Preferences
+  useEffect(() => {
+    localStorage.setItem('cyberspell_lang', lang);
+    localStorage.setItem('cyberspell_typing_mode', typingMode);
+  }, [lang, typingMode]);
 
   // Sync Firebase Auth
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setAuthLoading(false);
       if (user) {
         setFirebaseUser(user);
-        // Load player data from Firestore or prompt username setup
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const snap = await getDoc(userDocRef);
           if (snap.exists()) {
-            setPlayer(prev => ({ ...prev, ...snap.data(), uid: user.uid }));
+            const data = snap.data();
+            setPlayer(prev => ({ ...prev, ...data, uid: user.uid }));
+            if (data.preferredLang) setLang(data.preferredLang);
+            if (data.preferredTypingMode) setTypingMode(data.preferredTypingMode);
           } else {
-            // First time Google Sign In: prompt username setup
             const defaultName = user.displayName ? user.displayName.split(' ')[0] : 'CyberRunner';
             setNewUsernameInput(defaultName);
             setShowUsernameModal(true);
@@ -107,14 +120,18 @@ export default function App() {
 
   // Save to LocalStorage & Firestore
   useEffect(() => {
-    localStorage.setItem('cyberspell_player_v2', JSON.stringify(player));
-    localStorage.setItem('cyberspell_missions_v2', JSON.stringify(missions));
+    localStorage.setItem('cyberspell_player_v3', JSON.stringify(player));
+    localStorage.setItem('cyberspell_missions_v3', JSON.stringify(missions));
     if (firebaseUser) {
       try {
-        setDoc(doc(db, 'users', firebaseUser.uid), player, { merge: true }).catch(() => {});
+        setDoc(doc(db, 'users', firebaseUser.uid), {
+          ...player,
+          preferredLang: lang,
+          preferredTypingMode: typingMode
+        }, { merge: true }).catch(() => {});
       } catch(e){}
     }
-  }, [player, missions, firebaseUser]);
+  }, [player, missions, firebaseUser, lang, typingMode]);
 
   const currentClass = CHARACTER_CLASSES.find(c => c.id === player.classId) || CHARACTER_CLASSES[0];
 
@@ -123,7 +140,6 @@ export default function App() {
       await signInWithPopup(auth, googleProvider);
     } catch(err) {
       console.warn("Google popup simulated/fallback:", err);
-      // Fallback simulation for quick testing without live GCP project credentials
       const mockUid = 'goog-' + Math.random().toString(36).substring(2, 9);
       setFirebaseUser({
         uid: mockUid,
@@ -150,7 +166,6 @@ export default function App() {
     };
     setPlayer(updated);
     setShowUsernameModal(false);
-    // After first login & username, route to Choose Hero
     setActiveTab('choose-hero');
   };
 
@@ -197,11 +212,11 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Navigation Bar: Strict 3-Color Theme */}
+      {/* Top Navigation Bar: Strict 3-Color Theme (#090B1A, #7C3AED, #22D3EE) */}
       <header style={{
-        background: 'rgba(9, 11, 26, 0.92)',
+        background: 'rgba(9, 11, 26, 0.94)',
         backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(124, 58, 237, 0.3)',
+        borderBottom: '1px solid rgba(124, 58, 237, 0.35)',
         padding: '12px 24px',
         display: 'flex',
         alignItems: 'center',
@@ -239,7 +254,7 @@ export default function App() {
               CYBER<span style={{ color: '#22D3EE' }}>-SPELL</span>
             </div>
             <div style={{ fontSize: '11px', color: '#94A3B8', letterSpacing: '0.08em' }}>
-              DARK MAGIC × SCI-FI RPG
+              {t.tagline}
             </div>
           </div>
         </div>
@@ -247,15 +262,16 @@ export default function App() {
         {/* Navigation Tabs */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {[
-            { id: 'home', label: 'Home', icon: Sparkles },
-            { id: 'choose-hero', label: 'Heroes', icon: Shield },
-            { id: 'battle', label: 'Battle Arena', icon: Swords, highlight: true },
-            { id: 'worlds', label: 'World Map', icon: Map },
-            { id: 'multiplayer', label: 'Multiplayer', icon: Users },
-            { id: 'training', label: 'Adaptive Lab', icon: BookOpen },
-            { id: 'leaderboard', label: 'Rankings', icon: Trophy },
-            { id: 'stats', label: 'Stats', icon: BarChart3 },
-            { id: 'missions', label: 'Bounties', icon: Award }
+            { id: 'home', label: t.navHome, icon: Sparkles },
+            { id: 'choose-hero', label: t.navHeroes, icon: Shield },
+            { id: 'battle', label: t.navBattle, icon: Swords, highlight: true },
+            { id: 'worlds', label: t.navWorlds, icon: Map },
+            { id: 'multiplayer', label: t.navMultiplayer, icon: Users },
+            { id: 'training', label: t.navTraining, icon: BookOpen },
+            { id: 'leaderboard', label: t.navRankings, icon: Trophy },
+            { id: 'stats', label: t.navStats, icon: BarChart3 },
+            { id: 'missions', label: t.navBounties, icon: Award },
+            { id: 'settings', label: t.navSettings, icon: SettingsIcon }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -269,25 +285,45 @@ export default function App() {
                     : 'transparent',
                   color: isActive ? (tab.highlight ? '#090B1A' : '#22D3EE') : '#94A3B8',
                   border: isActive ? (tab.highlight ? 'none' : '1px solid #7C3AED') : '1px solid transparent',
-                  padding: '7px 12px',
+                  padding: '7px 11px',
                   borderRadius: '6px',
                   fontSize: '13px',
                   fontWeight: isActive ? 700 : 500,
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '5px',
                   boxShadow: isActive && tab.highlight ? '0 0 14px rgba(34,211,238,0.4)' : 'none'
                 }}
               >
-                <Icon size={15} />
+                <Icon size={14} />
                 <span>{tab.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* Auth & Player Quick HUD */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Quick Language Toggle, Sound, and Auth HUD */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {/* Quick Language Switcher Button */}
+          <button
+            onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
+            title="Switch Language / เปลี่ยนภาษา"
+            style={{
+              background: 'rgba(124, 58, 237, 0.2)',
+              border: '1px solid #7C3AED',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              fontSize: '12px',
+              color: '#22D3EE',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px'
+            }}
+          >
+            <Globe size={14} />
+            <strong>{lang === 'th' ? '🇹🇭 TH' : '🇬🇧 EN'}</strong>
+          </button>
+
           <button 
             onClick={toggleSound}
             title={soundMuted ? "Unmute Audio" : "Mute Audio"}
@@ -295,14 +331,14 @@ export default function App() {
               background: 'rgba(255, 255, 255, 0.04)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '6px',
-              padding: '7px',
+              padding: '6px 8px',
               color: soundMuted ? '#94A3B8' : '#22D3EE'
             }}
           >
-            {soundMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+            {soundMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
           </button>
 
-          {/* Firebase Google Auth Button */}
+          {/* Firebase Google Auth */}
           {firebaseUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <div 
@@ -318,57 +354,58 @@ export default function App() {
                   cursor: 'pointer'
                 }}
               >
-                <span style={{ fontSize: '18px' }}>{currentClass.icon}</span>
+                <span style={{ fontSize: '16px' }}>{currentClass.icon}</span>
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#F8FAFC' }}>
                     {player.username} <span style={{ color: '#22D3EE' }}>Lv.{player.level}</span>
                   </div>
-                  <div style={{ fontSize: '10px', color: '#94A3B8' }}>{player.playerId}</div>
                 </div>
               </div>
 
               <button
                 onClick={handleSignOut}
-                title="Sign Out"
+                title={t.signOut}
                 style={{
                   background: 'transparent',
                   border: '1px solid rgba(124, 58, 237, 0.4)',
                   borderRadius: '6px',
-                  padding: '7px',
+                  padding: '6px 8px',
                   color: '#94A3B8'
                 }}
               >
-                <LogOut size={16} />
+                <LogOut size={14} />
               </button>
             </div>
           ) : (
             <button
               onClick={handleGoogleLogin}
               className="btn-cyber-primary"
-              style={{ fontSize: '12px', padding: '8px 14px' }}
+              style={{ fontSize: '12px', padding: '7px 12px' }}
             >
-              <LogIn size={14} />
-              <span>Sign in with Google</span>
+              <LogIn size={13} />
+              <span>{t.signInGoogle}</span>
             </button>
           )}
         </div>
       </header>
 
-      {/* Main Views */}
+      {/* Main Content View Switcher */}
       <main style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column' }}>
         {activeTab === 'home' && (
           <HomeView 
+            t={t}
+            lang={lang}
             player={player} 
             onStartBattle={() => setActiveTab('battle')} 
             onChooseHero={() => setActiveTab('choose-hero')}
             onOpenWorlds={() => setActiveTab('worlds')}
-            onGoogleLogin={handleGoogleLogin}
-            firebaseUser={firebaseUser}
           />
         )}
 
         {activeTab === 'choose-hero' && (
           <ChooseHeroView 
+            t={t}
+            lang={lang}
             player={player}
             setPlayer={setPlayer}
             onHeroSelected={() => setActiveTab('battle')}
@@ -377,6 +414,9 @@ export default function App() {
 
         {activeTab === 'battle' && (
           <BattleArena 
+            t={t}
+            lang={lang}
+            typingMode={typingMode}
             player={player}
             setPlayer={setPlayer}
             world={currentWorld}
@@ -391,6 +431,8 @@ export default function App() {
 
         {activeTab === 'worlds' && (
           <WorldMapView 
+            t={t}
+            lang={lang}
             player={player}
             selectedWorld={currentWorld}
             onSelectWorld={(w) => {
@@ -402,6 +444,8 @@ export default function App() {
 
         {activeTab === 'multiplayer' && (
           <MultiplayerLobbyView 
+            t={t}
+            lang={lang}
             player={player}
             setPlayer={setPlayer}
             onLaunchGame={(room) => {
@@ -414,21 +458,33 @@ export default function App() {
 
         {activeTab === 'training' && (
           <AdaptiveLabView 
+            t={t}
+            lang={lang}
             player={player}
             setPlayer={setPlayer}
           />
         )}
 
         {activeTab === 'leaderboard' && (
-          <LeaderboardView player={player} />
+          <LeaderboardView t={t} lang={lang} player={player} />
         )}
 
         {activeTab === 'stats' && (
-          <StatsView player={player} setPlayer={setPlayer} />
+          <StatsView t={t} lang={lang} player={player} setPlayer={setPlayer} />
         )}
 
         {activeTab === 'missions' && (
-          <MissionsView missions={missions} setMissions={setMissions} gainXp={gainXp} />
+          <MissionsView t={t} lang={lang} missions={missions} setMissions={setMissions} gainXp={gainXp} />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsView 
+            t={t}
+            lang={lang}
+            setLang={setLang}
+            typingMode={typingMode}
+            setTypingMode={setTypingMode}
+          />
         )}
       </main>
 
@@ -478,7 +534,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Clean 3-Color Footer */}
+      {/* Strict 3-Color Footer */}
       <footer style={{
         padding: '14px 24px',
         borderTop: '1px solid rgba(124, 58, 237, 0.25)',
@@ -490,11 +546,11 @@ export default function App() {
         background: '#090B1A'
       }}>
         <div>
-          <strong style={{ color: '#22D3EE' }}>CYBER-SPELL:</strong> "Every keystroke is a spell. The better you type, the stronger you become."
+          <strong style={{ color: '#22D3EE' }}>CYBER-SPELL:</strong> "{t.everyKeystroke} {t.isArcaneSpell}"
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
-          <span>Theme: <strong style={{ color: '#7C3AED' }}>Magic × Sci-Fi (Tri-Color)</strong></span>
-          <span>Database: <strong style={{ color: '#22D3EE' }}>Firebase Synced</strong></span>
+          <span>Lang: <strong style={{ color: '#22D3EE' }}>{lang.toUpperCase()}</strong></span>
+          <span>Training: <strong style={{ color: '#7C3AED' }}>{typingMode.toUpperCase()}</strong></span>
         </div>
       </footer>
     </div>
@@ -502,9 +558,9 @@ export default function App() {
 }
 
 // ==========================================
-// 1. HOME VIEW (Tri-color redesign)
+// 1. HOME VIEW
 // ==========================================
-function HomeView({ player, onStartBattle, onChooseHero, onOpenWorlds, onGoogleLogin, firebaseUser }) {
+function HomeView({ t, lang, player, onStartBattle, onChooseHero, onOpenWorlds }) {
   const currentClass = CHARACTER_CLASSES.find(c => c.id === player.classId) || CHARACTER_CLASSES[0];
 
   return (
@@ -534,34 +590,34 @@ function HomeView({ player, onStartBattle, onChooseHero, onOpenWorlds, onGoogleL
           </div>
 
           <h1 style={{ fontSize: '42px', fontWeight: 900, lineHeight: 1.15, marginBottom: '16px' }}>
-            EVERY KEYSTROKE <br />
-            <span style={{ color: '#22D3EE' }}>IS AN ARCANE SPELL.</span>
+            {t.everyKeystroke} <br />
+            <span style={{ color: '#22D3EE' }}>{t.isArcaneSpell}</span>
           </h1>
 
           <p style={{ fontSize: '15px', color: '#94A3B8', lineHeight: 1.6, marginBottom: '24px' }}>
-            Channel neon plasma through keyboard velocity. High typing speed and pinpoint accuracy amplify your damage multiplier and shatter incoming cybersecurity barriers.
+            {t.heroSubtitle}
           </p>
 
           <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
             <button onClick={onStartBattle} className="btn-cyber-primary" style={{ fontSize: '15px', padding: '12px 28px' }}>
               <Swords size={18} />
-              <span>ENTER BATTLE ARENA</span>
+              <span>{t.enterArena}</span>
             </button>
 
             <button onClick={onChooseHero} className="btn-cyber-magic" style={{ fontSize: '15px' }}>
               <Shield size={18} />
-              <span>CHOOSE YOUR HERO</span>
+              <span>{t.chooseHero}</span>
             </button>
 
             <button onClick={onOpenWorlds} className="btn-cyber-outline" style={{ fontSize: '14px' }}>
               <Map size={16} />
-              <span>SECTORS ATLAS</span>
+              <span>{t.sectorsAtlas}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Active Hero Spotlight Card */}
+      {/* Active Hero Card */}
       <div className="glass-panel" style={{ padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{
@@ -574,8 +630,10 @@ function HomeView({ player, onStartBattle, onChooseHero, onOpenWorlds, onGoogleL
             {currentClass.icon}
           </div>
           <div>
-            <div style={{ fontSize: '12px', color: '#22D3EE', fontWeight: 'bold' }}>ACTIVE HERO ARCHETYPE</div>
-            <h3 style={{ fontSize: '24px', fontWeight: 800 }}>{currentClass.name}</h3>
+            <div style={{ fontSize: '12px', color: '#22D3EE', fontWeight: 'bold' }}>{t.activeHero}</div>
+            <h3 style={{ fontSize: '24px', fontWeight: 800 }}>
+              {lang === 'th' ? currentClass.nameTh : currentClass.name}
+            </h3>
             <p style={{ color: '#94A3B8', fontSize: '13px', marginTop: '2px' }}>{currentClass.desc}</p>
             <div style={{ marginTop: '6px', fontSize: '12px', color: '#22D3EE' }}>
               <strong>Passive:</strong> {currentClass.passive}
@@ -584,7 +642,7 @@ function HomeView({ player, onStartBattle, onChooseHero, onOpenWorlds, onGoogleL
         </div>
 
         <button onClick={onChooseHero} className="btn-cyber-outline">
-          Change Hero
+          {t.changeHero}
         </button>
       </div>
     </div>
@@ -592,9 +650,9 @@ function HomeView({ player, onStartBattle, onChooseHero, onOpenWorlds, onGoogleL
 }
 
 // ==========================================
-// 2. CHOOSE YOUR HERO (5 Classes Requirement)
+// 2. CHOOSE YOUR HERO
 // ==========================================
-function ChooseHeroView({ player, setPlayer, onHeroSelected }) {
+function ChooseHeroView({ t, lang, player, setPlayer, onHeroSelected }) {
   const selectHero = (heroId) => {
     soundManager.playLevelUp();
     setPlayer(prev => ({
@@ -608,10 +666,10 @@ function ChooseHeroView({ player, setPlayer, onHeroSelected }) {
     <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '28px', textAlign: 'center' }}>
         <h1 style={{ fontSize: '34px', fontWeight: 900, marginBottom: '8px' }}>
-          CHOOSE YOUR <span style={{ color: '#22D3EE' }}>HERO</span>
+          {lang === 'th' ? 'เลือกตัวละคร' : 'CHOOSE YOUR'} <span style={{ color: '#22D3EE' }}>{lang === 'th' ? 'ฮีโร่' : 'HERO'}</span>
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>
-          Select your cyber archetype. Your choice alters typing passives, visual spell bursts, and multiplayer presence.
+          {lang === 'th' ? 'ฮีโร่แต่ละตัวมีพลังเวทมนตร์และคุณสมบัติการโจมตีแตกต่างกัน' : 'Select your cyber archetype. Your choice alters typing passives, visual spell bursts, and multiplayer presence.'}
         </p>
       </div>
 
@@ -649,7 +707,9 @@ function ChooseHeroView({ player, setPlayer, onHeroSelected }) {
 
               <div>
                 <div style={{ fontSize: '40px', marginBottom: '12px' }}>{cls.icon}</div>
-                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#F8FAFC' }}>{cls.name}</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: '#F8FAFC' }}>
+                  {lang === 'th' ? cls.nameTh : cls.name}
+                </h3>
                 <div style={{ fontSize: '12px', color: '#22D3EE', marginBottom: '8px' }}>{cls.tagline}</div>
                 <p style={{ fontSize: '13px', color: '#94A3B8', lineHeight: 1.5, marginBottom: '16px' }}>
                   {cls.desc}
@@ -673,7 +733,7 @@ function ChooseHeroView({ player, setPlayer, onHeroSelected }) {
                 className={isSelected ? "btn-cyber-primary" : "btn-cyber-magic"}
                 style={{ width: '100%' }}
               >
-                {isSelected ? 'HERO EQUIPPED' : 'SELECT HERO'}
+                {isSelected ? (lang === 'th' ? 'เลือกใช้อยู่' : 'HERO EQUIPPED') : (lang === 'th' ? 'เลือกตัวละครนี้' : 'SELECT HERO')}
               </button>
             </div>
           );
@@ -684,9 +744,9 @@ function ChooseHeroView({ player, setPlayer, onHeroSelected }) {
 }
 
 // ==========================================
-// 3. BATTLE ARENA (Massive Word Deck & High-legibility typing area)
+// 3. BATTLE ARENA (Typing Sequences & Hand-crafted High-HP Monsters)
 // ==========================================
-function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMissions, onSelectWorld, roomData }) {
+function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gainXp, missions, setMissions, onSelectWorld, roomData }) {
   const [enemyIndex, setEnemyIndex] = useState(0);
   const currentEnemyData = world.enemies[enemyIndex] || world.enemies[0];
 
@@ -695,15 +755,22 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
   const [playerHp, setPlayerHp] = useState(100);
   const [playerMaxHp] = useState(100);
 
-  // Initialize Shuffled WordDeck with non-repeating algorithm & adaptive difficulty
-  const deckRef = useRef(null);
-  const [currentWord, setCurrentWord] = useState('');
+  // TYPING SEQUENCE ENGINE
+  // Sequence deck generator
+  const sequenceDeckRef = useRef(null);
+  const [currentSequence, setCurrentSequence] = useState([]);
+  const [sequenceIndex, setSequenceIndex] = useState(0); // Which word in sequence is currently active
+  const [sequenceAccumulatedDmg, setSequenceAccumulatedDmg] = useState(0);
 
   useEffect(() => {
-    const badKeys = Object.keys(player.keyErrors || {}).filter(k => player.keyErrors[k] > 0);
-    deckRef.current = new WordDeck(world.wordTier, badKeys);
-    setCurrentWord(deckRef.current.nextWord());
-  }, [world, player.keyErrors]);
+    sequenceDeckRef.current = new SequenceDeck(typingMode, world.wordTier);
+    const seq = sequenceDeckRef.current.generateSequence(world.difficulty, currentEnemyData.isBoss);
+    setCurrentSequence(seq);
+    setSequenceIndex(0);
+    setSequenceAccumulatedDmg(0);
+  }, [world, currentEnemyData, typingMode]);
+
+  const activeTargetWord = currentSequence[sequenceIndex] || '';
 
   const [inputVal, setInputVal] = useState('');
   const [combo, setCombo] = useState(0);
@@ -716,12 +783,16 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
 
   const [floatingDamages, setFloatingDamages] = useState([]);
   const [enemyHitFlash, setEnemyHitFlash] = useState(false);
+  const [enemyAttacking, setEnemyAttacking] = useState(false);
   const [battleOver, setBattleOver] = useState(null); // 'victory' | 'defeat'
 
   // Enemy Counter Attack
   useEffect(() => {
     if (battleOver) return;
     const interval = setInterval(() => {
+      setEnemyAttacking(true);
+      setTimeout(() => setEnemyAttacking(false), 400);
+
       setPlayerHp(prev => {
         const next = prev - currentEnemyData.attackPower;
         soundManager.playError();
@@ -758,57 +829,70 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
 
     setTotalKeys(t => t + 1);
 
-    if (currentWord.startsWith(val)) {
+    if (activeTargetWord.startsWith(val)) {
       setCorrectKeys(k => k + 1);
-      soundManager.playKey(480 + val.length * 25);
+      soundManager.playKey(460 + val.length * 20);
 
-      if (val === currentWord) {
-        // Word Completed!
+      if (val === activeTargetWord) {
+        // Complete single word in sequence
         const newCombo = combo + 1;
         setCombo(newCombo);
         if (newCombo > maxCombo) setMaxCombo(newCombo);
 
+        // Accumulate damage for sequence
+        let wordDmg = activeTargetWord.length * 40;
+        if (player.classId === 'cyber-mage' && activeTargetWord.length >= 8) wordDmg *= 1.2;
+        if (player.classId === 'void-hunter' && currentAccuracy >= 95) wordDmg *= 1.25;
+
+        const nextAccum = sequenceAccumulatedDmg + wordDmg;
+        setSequenceAccumulatedDmg(nextAccum);
+
         soundManager.playAttack(newCombo);
 
-        // Damage Calculation
-        let baseDmg = currentWord.length * 15;
-        // Cyber Mage passive: +20% Critical Burst on 8+ letter words
-        if (player.classId === 'cyber-mage' && currentWord.length >= 8) baseDmg *= 1.2;
-        // Void Hunter passive: +25% on 95%+ accuracy
-        if (player.classId === 'void-hunter' && currentAccuracy >= 95) baseDmg *= 1.25;
-
-        const comboMultiplier = 1 + Math.min(newCombo * 0.1, 2.5);
-        const finalDmg = Math.round(baseDmg * comboMultiplier);
-
-        setTotalDamageDealt(d => d + finalDmg);
-
-        // Floating Damage effect
-        const dmgId = Date.now();
-        setFloatingDamages(prev => [...prev, { id: dmgId, dmg: finalDmg }]);
-        setTimeout(() => setFloatingDamages(p => p.filter(i => i.id !== dmgId)), 700);
-
-        setEnemyHitFlash(true);
-        setTimeout(() => setEnemyHitFlash(false), 200);
-
-        // Star Guardian passive: Heal 6 HP every 5 words
+        // Star Guardian passive
         if (player.classId === 'star-guardian' && newCombo % 5 === 0) {
           setPlayerHp(hp => Math.min(100, hp + 6));
         }
 
-        // Subtract Enemy HP
-        setEnemyHp(hp => {
-          const nextHp = hp - finalDmg;
-          if (nextHp <= 0) {
-            handleEnemyDefeated();
-            return 0;
-          }
-          return nextHp;
-        });
+        // Check if finished entire sequence!
+        if (sequenceIndex + 1 >= currentSequence.length) {
+          // RELEASE FULL SEQUENCE BURST ATTACK!
+          soundManager.playComboBurst();
+          const burstMultiplier = 1 + Math.min(newCombo * 0.12, 3.0);
+          const finalBurstDmg = Math.round(nextAccum * burstMultiplier);
 
-        // Pull fresh non-repeating word from deck
-        if (deckRef.current) {
-          setCurrentWord(deckRef.current.nextWord());
+          setTotalDamageDealt(d => d + finalBurstDmg);
+
+          // Visual damage popup
+          const dmgId = Date.now();
+          setFloatingDamages(prev => [...prev, { id: dmgId, dmg: finalBurstDmg, isBurst: true }]);
+          setTimeout(() => setFloatingDamages(p => p.filter(i => i.id !== dmgId)), 800);
+
+          setEnemyHitFlash(true);
+          setTimeout(() => setEnemyHitFlash(false), 250);
+
+          // Damage to monster
+          setEnemyHp(hp => {
+            const nextHp = hp - finalBurstDmg;
+            if (nextHp <= 0) {
+              handleEnemyDefeated();
+              return 0;
+            }
+            return nextHp;
+          });
+
+          // Generate next fresh sequence
+          if (sequenceDeckRef.current) {
+            const nextSeq = sequenceDeckRef.current.generateSequence(world.difficulty, currentEnemyData.isBoss);
+            setCurrentSequence(nextSeq);
+            setSequenceIndex(0);
+            setSequenceAccumulatedDmg(0);
+          }
+        } else {
+          // Advance to next word in sequence
+          setSequenceIndex(idx => idx + 1);
         }
+
         setInputVal('');
         return;
       }
@@ -819,7 +903,7 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
       soundManager.playError();
 
       const lastChar = val.slice(-1).toLowerCase();
-      if (lastChar.match(/[a-z]/)) {
+      if (lastChar.match(/[a-zก-๙]/)) {
         setPlayer(prev => ({
           ...prev,
           keyErrors: {
@@ -829,7 +913,7 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
         }));
       }
 
-      // Tech Knight passive: typo only reduces combo by 1
+      // Tech Knight typo passive
       if (player.classId === 'tech-knight') {
         setCombo(c => Math.max(0, c - 1));
       } else {
@@ -849,11 +933,11 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
         setEnemyMaxHp(world.enemies[nextIdx].maxHp);
       }, 500);
     } else {
-      // Boss Defeated!
+      // World Clear!
       setBattleOver('victory');
-      confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+      confetti({ particleCount: 130, spread: 80, origin: { y: 0.5 } });
 
-      const earnedXp = Math.round((totalDamageDealt / 4) + (currentWpm * 3) + (currentAccuracy * 2));
+      const earnedXp = Math.round((totalDamageDealt / 6) + (currentWpm * 4) + (currentAccuracy * 2));
       gainXp(earnedXp);
 
       setPlayer(prev => ({
@@ -886,11 +970,16 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
     setTotalDamageDealt(0);
     setBattleOver(null);
     setInputVal('');
-    if (deckRef.current) setCurrentWord(deckRef.current.nextWord());
+    if (sequenceDeckRef.current) {
+      const seq = sequenceDeckRef.current.generateSequence(world.difficulty, world.enemies[0].isBoss);
+      setCurrentSequence(seq);
+      setSequenceIndex(0);
+      setSequenceAccumulatedDmg(0);
+    }
   };
 
   return (
-    <div style={{ maxWidth: '980px', margin: '0 auto', width: '100%' }}>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       {/* Top Banner */}
       <div style={{
         display: 'flex',
@@ -906,39 +995,39 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
           <span style={{ fontSize: '20px' }}>🌍</span>
           <div>
             <div style={{ fontSize: '15px', fontWeight: 800, color: '#F8FAFC' }}>
-              {world.name} (Wave {enemyIndex + 1}/{world.enemies.length})
+              {lang === 'th' ? currentWorld.nameTh : currentWorld.name} (Wave {enemyIndex + 1}/{world.enemies.length})
             </div>
             <div style={{ fontSize: '11px', color: '#94A3B8' }}>
-              Mode: <strong style={{ color: '#22D3EE' }}>{mode.toUpperCase()}</strong> | Difficulty: {world.difficulty}
+              Mode: <strong style={{ color: '#22D3EE' }}>{typingMode.toUpperCase()}</strong> | Difficulty: {world.difficulty.toUpperCase()}
             </div>
           </div>
         </div>
 
         <button onClick={onSelectWorld} className="btn-cyber-outline" style={{ padding: '6px 12px', fontSize: '12px' }}>
-          Select Sector
+          {t.selectSector}
         </button>
       </div>
 
       {/* Combat Metrics HUD */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginBottom: '16px' }}>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#94A3B8' }}>WPM</div>
-          <div style={{ fontSize: '22px', fontWeight: 900, color: '#22D3EE' }}>{currentWpm}</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.speed}</div>
+          <div style={{ fontSize: '22px', fontWeight: 900, color: '#22D3EE' }}>{currentWpm} WPM</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#94A3B8' }}>ACCURACY</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.accuracy}</div>
           <div style={{ fontSize: '22px', fontWeight: 900, color: currentAccuracy >= 95 ? '#22D3EE' : '#7C3AED' }}>{currentAccuracy}%</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#94A3B8' }}>COMBO</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.combo}</div>
           <div style={{ fontSize: '22px', fontWeight: 900, color: '#7C3AED' }}>{combo}x</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#94A3B8' }}>DAMAGE</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.damage}</div>
           <div style={{ fontSize: '22px', fontWeight: 900, color: '#F8FAFC' }}>{totalDamageDealt}</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
-          <div style={{ fontSize: '11px', color: '#94A3B8' }}>TIME</div>
+          <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.time}</div>
           <div style={{ fontSize: '22px', fontWeight: 900, color: '#94A3B8' }}>{battleTime}s</div>
         </div>
       </div>
@@ -946,7 +1035,7 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
       {/* Arena Stage */}
       <div className="glass-panel" style={{
         padding: '32px 20px',
-        minHeight: '360px',
+        minHeight: '380px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -956,14 +1045,20 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
         border: '1px solid rgba(124, 58, 237, 0.4)',
         boxShadow: '0 0 30px rgba(124, 58, 237, 0.15)'
       }}>
-        {/* Enemy HP and Sprite */}
-        <div style={{ width: '100%', maxWidth: '580px', textAlign: 'center' }}>
+        {/* Monster HP and Hand-crafted Illustration */}
+        <div style={{ width: '100%', maxWidth: '620px', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
-            <span style={{ fontWeight: 800 }}>{currentEnemyData.name}</span>
-            <span style={{ color: '#22D3EE', fontWeight: 700 }}>{enemyHp} / {enemyMaxHp} HP</span>
+            <span style={{ fontWeight: 800 }}>
+              {currentEnemyData.isBoss && '👑 BOSS: '}
+              {lang === 'th' ? currentEnemyData.nameTh : currentEnemyData.name}
+            </span>
+            <span style={{ color: '#22D3EE', fontWeight: 700 }}>
+              {enemyHp.toLocaleString()} / {enemyMaxHp.toLocaleString()} HP
+            </span>
           </div>
+
           <div style={{
-            width: '100%', height: '10px', background: 'rgba(0,0,0,0.6)', borderRadius: '5px', overflow: 'hidden',
+            width: '100%', height: '12px', background: 'rgba(0,0,0,0.6)', borderRadius: '6px', overflow: 'hidden',
             border: '1px solid rgba(124, 58, 237, 0.4)', marginBottom: '16px'
           }}>
             <div style={{
@@ -975,36 +1070,93 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
           </div>
 
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            <div className={enemyHitFlash ? 'enemy-hit' : 'animate-float'} style={{ fontSize: '64px' }}>
-              {currentEnemyData.sprite}
-            </div>
+            <MonsterIllustration 
+              id={currentEnemyData.id} 
+              isBoss={currentEnemyData.isBoss}
+              isAttacking={enemyAttacking}
+              isHit={enemyHitFlash}
+            />
+
             {floatingDamages.map(d => (
               <div key={d.id} style={{
-                position: 'absolute', top: '-24px', right: '-20px',
-                color: '#22D3EE', fontSize: '24px', fontWeight: 900,
-                fontFamily: 'Orbitron', textShadow: '0 0 10px #7C3AED'
+                position: 'absolute', top: '-24px', right: '-24px',
+                color: '#22D3EE', fontSize: d.isBurst ? '28px' : '22px', fontWeight: 900,
+                fontFamily: 'Orbitron', textShadow: '0 0 12px #7C3AED'
               }}>
-                -{d.dmg}
+                -{d.dmg} {d.isBurst && 'BURST!'}
               </div>
             ))}
           </div>
         </div>
 
-        {/* HIGH LEGIBILITY TYPING AREA (Never obscured by animations) */}
-        <div style={{ width: '100%', maxWidth: '640px', textAlign: 'center', margin: '20px 0', zIndex: 10 }}>
+        {/* TYPING SEQUENCE BARS (Continuous Multi-Word Spell Progression) */}
+        <div style={{ width: '100%', maxWidth: '780px', margin: '20px 0', zIndex: 10, textAlign: 'center' }}>
+          <div style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '8px', letterSpacing: '0.05em' }}>
+            {t.currentSpell} (Step {sequenceIndex + 1}/{currentSequence.length})
+          </div>
+
+          {/* Sequence Words Flow UI */}
           <div style={{
-            fontSize: currentWord.length > 25 ? '20px' : '32px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: '16px'
+          }}>
+            {currentSequence.map((word, idx) => {
+              const isDone = idx < sequenceIndex;
+              const isCurrent = idx === sequenceIndex;
+
+              return (
+                <div 
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <div style={{
+                    padding: isCurrent ? '8px 16px' : '6px 12px',
+                    borderRadius: '6px',
+                    background: isCurrent 
+                      ? 'rgba(34, 211, 238, 0.2)' 
+                      : (isDone ? 'rgba(124, 58, 237, 0.3)' : 'rgba(9, 11, 26, 0.6)'),
+                    border: isCurrent 
+                      ? '2px solid #22D3EE' 
+                      : (isDone ? '1px solid #7C3AED' : '1px solid rgba(255,255,255,0.1)'),
+                    color: isCurrent ? '#22D3EE' : (isDone ? '#94A3B8' : '#64748B'),
+                    fontWeight: isCurrent ? 800 : 500,
+                    fontSize: isCurrent ? '16px' : '13px',
+                    fontFamily: 'JetBrains Mono',
+                    boxShadow: isCurrent ? '0 0 16px rgba(34, 211, 238, 0.4)' : 'none',
+                    textDecoration: isDone ? 'line-through' : 'none'
+                  }}>
+                    {word}
+                  </div>
+                  {idx < currentSequence.length - 1 && (
+                    <span style={{ color: '#7C3AED', fontSize: '14px' }}>→</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Current Word Letter-by-Letter Display */}
+          <div style={{
+            fontSize: activeTargetWord.length > 20 ? '24px' : '32px',
             fontFamily: 'JetBrains Mono',
             letterSpacing: '2px',
             marginBottom: '14px',
             background: '#090B1A',
-            padding: '16px 24px',
+            padding: '14px 24px',
             borderRadius: '10px',
             border: '2px solid #7C3AED',
             boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
             display: 'inline-block'
           }}>
-            {currentWord.split('').map((char, idx) => {
+            {activeTargetWord.split('').map((char, idx) => {
               const typed = inputVal[idx];
               let color = '#64748B';
               if (typed !== undefined) {
@@ -1026,7 +1178,7 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
               value={inputVal}
               onChange={handleInputChange}
               onPaste={e => { e.preventDefault(); alert("Pasting spells is blocked."); }}
-              placeholder="TYPE THE INCANTATION..."
+              placeholder={t.typePrompt}
               disabled={battleOver !== null}
               style={{
                 width: '100%',
@@ -1047,10 +1199,10 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
         </div>
 
         {/* Player Health Bar */}
-        <div style={{ width: '100%', maxWidth: '580px' }}>
+        <div style={{ width: '100%', maxWidth: '620px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
             <span style={{ color: '#22D3EE', fontWeight: 'bold' }}>
-              OPERATIVE: {player.username} ({player.classId.toUpperCase()})
+              {player.username} ({player.classId.toUpperCase()})
             </span>
             <span style={{ color: '#F8FAFC' }}>{playerHp} / {playerMaxHp} HP</span>
           </div>
@@ -1080,7 +1232,7 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
               {battleOver === 'victory' ? '🏆' : '💀'}
             </div>
             <h2 style={{ fontSize: '26px', color: battleOver === 'victory' ? '#22D3EE' : '#7C3AED', marginBottom: '12px' }}>
-              {battleOver === 'victory' ? 'SECTOR CLEARED' : 'SYSTEM OVERHEAT'}
+              {battleOver === 'victory' ? t.missionComplete : t.systemOverheat}
             </h2>
             <div style={{
               background: 'rgba(0,0,0,0.5)', padding: '16px', borderRadius: '8px',
@@ -1093,8 +1245,8 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
               <div>Damage: <strong style={{ color: '#fff' }}>{totalDamageDealt}</strong></div>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button onClick={restartBattle} className="btn-cyber-primary">PLAY AGAIN</button>
-              <button onClick={onSelectWorld} className="btn-cyber-outline">SECTORS</button>
+              <button onClick={restartBattle} className="btn-cyber-primary">{t.playAgain}</button>
+              <button onClick={onSelectWorld} className="btn-cyber-outline">{t.selectSector}</button>
             </div>
           </div>
         </div>
@@ -1104,240 +1256,9 @@ function BattleArena({ player, setPlayer, world, mode, gainXp, missions, setMiss
 }
 
 // ==========================================
-// 4. MULTIPLAYER LOBBY (Create Room, Join Room, Friends)
+// 4. WORLD MAP VIEW
 // ==========================================
-function MultiplayerLobbyView({ player, setPlayer, onLaunchGame }) {
-  const [createdRoomCode, setCreatedRoomCode] = useState('X7KM92');
-  const [joinCodeInput, setJoinCodeInput] = useState('');
-  const [roomPlayers, setRoomPlayers] = useState([
-    { id: player.uid, username: player.username, level: player.level, ready: true, isHost: true, classId: player.classId }
-  ]);
-  const [searchFriendInput, setSearchFriendInput] = useState('');
-
-  const generateRoom = () => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setCreatedRoomCode(code);
-    setRoomPlayers([
-      { id: player.uid, username: player.username, level: player.level, ready: true, isHost: true, classId: player.classId }
-    ]);
-  };
-
-  const joinRoom = (e) => {
-    e.preventDefault();
-    if (!joinCodeInput.trim()) return;
-    setCreatedRoomCode(joinCodeInput.toUpperCase());
-    // Simulate joining lobby
-    setRoomPlayers([
-      { id: 'usr-host', username: 'CipherQueen', level: 22, ready: true, isHost: true, classId: 'quantum-witch' },
-      { id: player.uid, username: player.username, level: player.level, ready: false, isHost: false, classId: player.classId }
-    ]);
-    setJoinCodeInput('');
-  };
-
-  const toggleReady = () => {
-    setRoomPlayers(prev => prev.map(p => p.id === player.uid ? { ...p, ready: !p.ready } : p));
-  };
-
-  const handleAddFriend = (e) => {
-    e.preventDefault();
-    if (!searchFriendInput.trim()) return;
-    const newFriend = {
-      id: 'usr-' + Date.now(),
-      name: searchFriendInput.trim(),
-      playerId: 'CYBER-' + Math.floor(1000 + Math.random() * 9000),
-      status: 'online',
-      wpm: 80,
-      classId: 'tech-knight'
-    };
-    setPlayer(prev => ({ ...prev, friends: [...prev.friends, newFriend] }));
-    setSearchFriendInput('');
-    alert(`Friend request sent to ${searchFriendInput}!`);
-  };
-
-  const acceptRequest = (req) => {
-    setPlayer(prev => ({
-      ...prev,
-      friends: [...prev.friends, { id: req.id, name: req.name, playerId: req.playerId, status: 'online', wpm: 85, classId: req.classId }],
-      friendRequests: prev.friendRequests.filter(r => r.id !== req.id)
-    }));
-  };
-
-  return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
-          MULTIPLAYER <span style={{ color: '#22D3EE' }}>ARENA LOBBY</span>
-        </h1>
-        <p style={{ color: '#94A3B8', fontSize: '14px' }}>
-          Form rooms, invite companions from your network, or enter a match code to duel.
-        </p>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
-        {/* Left: Active Room Lobby */}
-        <div className="glass-panel" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: '#94A3B8' }}>ACTIVE ROOM CODE</div>
-              <div style={{ fontSize: '28px', fontWeight: 900, color: '#22D3EE', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>{createdRoomCode}</span>
-                <button 
-                  onClick={() => { navigator.clipboard.writeText(createdRoomCode); alert("Room code copied!"); }}
-                  style={{ background: 'transparent', border: 'none', color: '#7C3AED' }}
-                >
-                  <Copy size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button onClick={generateRoom} className="btn-cyber-outline" style={{ fontSize: '12px' }}>
-                Create New Room
-              </button>
-            </div>
-          </div>
-
-          {/* Lobby Players List */}
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '12px' }}>LOBBY OPERATIVES ({roomPlayers.length}/4)</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {roomPlayers.map(rp => (
-                <div key={rp.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 16px', background: 'rgba(9, 11, 26, 0.6)', borderRadius: '8px',
-                  border: '1px solid rgba(124, 58, 237, 0.3)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ fontSize: '24px' }}>🛡️</div>
-                    <div>
-                      <div style={{ fontWeight: 'bold', color: '#F8FAFC' }}>
-                        {rp.username} {rp.isHost && <span style={{ color: '#22D3EE', fontSize: '11px' }}>(HOST)</span>}
-                      </div>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>Lv.{rp.level}</div>
-                    </div>
-                  </div>
-
-                  <div>
-                    {rp.ready ? (
-                      <span style={{ color: '#22D3EE', fontSize: '12px', fontWeight: 'bold' }}>✓ READY</span>
-                    ) : (
-                      <span style={{ color: '#94A3B8', fontSize: '12px' }}>NOT READY</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={toggleReady} className="btn-cyber-outline" style={{ flex: 1 }}>
-              Toggle Ready Status
-            </button>
-            <button 
-              onClick={() => onLaunchGame({ code: createdRoomCode, players: roomPlayers })}
-              className="btn-cyber-primary" 
-              style={{ flex: 1 }}
-            >
-              <Play size={16} />
-              <span>START MATCH</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Join Room & Friend Network */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Join with Code */}
-          <div className="glass-panel" style={{ padding: '20px' }}>
-            <h4 style={{ fontSize: '15px', color: '#22D3EE', marginBottom: '10px' }}>JOIN EXISTING ROOM</h4>
-            <form onSubmit={joinRoom} style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="text"
-                value={joinCodeInput}
-                onChange={e => setJoinCodeInput(e.target.value)}
-                placeholder="Code e.g. X7KM92"
-                style={{
-                  flex: 1, padding: '8px 12px', background: 'rgba(9, 11, 26, 0.7)',
-                  border: '1px solid #7C3AED', borderRadius: '6px', color: '#fff', fontSize: '13px'
-                }}
-              />
-              <button type="submit" className="btn-cyber-primary" style={{ padding: '8px 14px', fontSize: '12px' }}>
-                Join
-              </button>
-            </form>
-          </div>
-
-          {/* Friends & Invite System */}
-          <div className="glass-panel" style={{ padding: '20px', flex: 1 }}>
-            <h4 style={{ fontSize: '15px', marginBottom: '12px' }}>FRIEND NETWORK</h4>
-            
-            <form onSubmit={handleAddFriend} style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
-              <input 
-                type="text"
-                value={searchFriendInput}
-                onChange={e => setSearchFriendInput(e.target.value)}
-                placeholder="Username or CYBER-ID..."
-                style={{
-                  flex: 1, padding: '8px 10px', background: 'rgba(9, 11, 26, 0.7)',
-                  border: '1px solid rgba(124, 58, 237, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '12px'
-                }}
-              />
-              <button type="submit" className="btn-cyber-magic" style={{ padding: '8px 12px', fontSize: '12px' }}>
-                Add
-              </button>
-            </form>
-
-            {/* Friend Requests */}
-            {player.friendRequests && player.friendRequests.length > 0 && (
-              <div style={{ marginBottom: '14px' }}>
-                <div style={{ fontSize: '11px', color: '#22D3EE', fontWeight: 'bold', marginBottom: '6px' }}>PENDING REQUESTS</div>
-                {player.friendRequests.map(req => (
-                  <div key={req.id} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '6px 10px', background: 'rgba(124, 58, 237, 0.15)', borderRadius: '6px', marginBottom: '4px'
-                  }}>
-                    <span style={{ fontSize: '12px' }}>{req.name}</span>
-                    <button onClick={() => acceptRequest(req)} className="btn-cyber-primary" style={{ padding: '3px 8px', fontSize: '10px' }}>
-                      Accept
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Friend List with Invite */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
-              {player.friends.map(f => (
-                <div key={f.id} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 10px', background: 'rgba(9, 11, 26, 0.5)', borderRadius: '6px', fontSize: '12px'
-                }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', color: '#F8FAFC' }}>{f.name}</div>
-                    <div style={{ fontSize: '10px', color: f.status === 'online' ? '#22D3EE' : '#94A3B8' }}>
-                      ● {f.status} ({f.wpm} WPM)
-                    </div>
-                  </div>
-                  <button 
-                    onClick={() => alert(`Invite sent to ${f.name} to join room ${createdRoomCode}!`)}
-                    className="btn-cyber-outline" 
-                    style={{ padding: '4px 8px', fontSize: '11px' }}
-                  >
-                    Invite
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// 5. WORLD MAP VIEW
-// ==========================================
-function WorldMapView({ player, selectedWorld, onSelectWorld }) {
+function WorldMapView({ t, lang, player, selectedWorld, onSelectWorld }) {
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
@@ -1345,7 +1266,7 @@ function WorldMapView({ player, selectedWorld, onSelectWorld }) {
           CYBER REALM <span style={{ color: '#22D3EE' }}>ATLAS</span>
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>
-          Progressive sectors powered by our non-repeating dynamic word matrix.
+          {lang === 'th' ? 'สำรวจแต่ละด่านพร้อมเผชิญหน้ากับมอนสเตอร์ HP สูงและระบบคำแบบ Sequence' : 'Progressive sectors powered by our non-repeating dynamic word matrix.'}
         </p>
       </div>
 
@@ -1380,7 +1301,7 @@ function WorldMapView({ player, selectedWorld, onSelectWorld }) {
               </div>
 
               <h3 style={{ fontSize: '20px', fontWeight: 800, marginBottom: '8px', color: '#fff' }}>
-                {w.name}
+                {lang === 'th' ? w.nameTh : w.name}
               </h3>
 
               <p style={{ fontSize: '13px', color: '#94A3B8', marginBottom: '16px', lineHeight: 1.5 }}>
@@ -1393,7 +1314,7 @@ function WorldMapView({ player, selectedWorld, onSelectWorld }) {
                 className={isSelected ? "btn-cyber-primary" : "btn-cyber-magic"}
                 style={{ width: '100%', opacity: isUnlocked ? 1 : 0.5 }}
               >
-                {isSelected ? 'CURRENTLY ENGAGED' : (isUnlocked ? 'DEPLOY TO SECTOR' : `UNLOCK AT LV.${w.levelReq}`)}
+                {isSelected ? (lang === 'th' ? 'ด่านปัจจุบัน' : 'CURRENTLY ENGAGED') : (isUnlocked ? (lang === 'th' ? 'เริ่มต่อสู้ในด่านนี้' : 'DEPLOY TO SECTOR') : `UNLOCK AT LV.${w.levelReq}`)}
               </button>
             </div>
           );
@@ -1404,9 +1325,207 @@ function WorldMapView({ player, selectedWorld, onSelectWorld }) {
 }
 
 // ==========================================
-// 6. ADAPTIVE NEURAL LAB
+// 5. MULTIPLAYER LOBBY VIEW
 // ==========================================
-function AdaptiveLabView({ player }) {
+function MultiplayerLobbyView({ t, lang, player, setPlayer, onLaunchGame }) {
+  const [createdRoomCode, setCreatedRoomCode] = useState('X7KM92');
+  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const [roomPlayers, setRoomPlayers] = useState([
+    { id: player.uid, username: player.username, level: player.level, ready: true, isHost: true, classId: player.classId }
+  ]);
+  const [searchFriendInput, setSearchFriendInput] = useState('');
+
+  const generateRoom = () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setCreatedRoomCode(code);
+    setRoomPlayers([
+      { id: player.uid, username: player.username, level: player.level, ready: true, isHost: true, classId: player.classId }
+    ]);
+  };
+
+  const joinRoom = (e) => {
+    e.preventDefault();
+    if (!joinCodeInput.trim()) return;
+    setCreatedRoomCode(joinCodeInput.toUpperCase());
+    setRoomPlayers([
+      { id: 'usr-host', username: 'CipherQueen', level: 22, ready: true, isHost: true, classId: 'quantum-witch' },
+      { id: player.uid, username: player.username, level: player.level, ready: false, isHost: false, classId: player.classId }
+    ]);
+    setJoinCodeInput('');
+  };
+
+  const toggleReady = () => {
+    setRoomPlayers(prev => prev.map(p => p.id === player.uid ? { ...p, ready: !p.ready } : p));
+  };
+
+  const handleAddFriend = (e) => {
+    e.preventDefault();
+    if (!searchFriendInput.trim()) return;
+    const newFriend = {
+      id: 'usr-' + Date.now(),
+      name: searchFriendInput.trim(),
+      playerId: 'CYBER-' + Math.floor(1000 + Math.random() * 9000),
+      status: 'online',
+      wpm: 80,
+      classId: 'tech-knight'
+    };
+    setPlayer(prev => ({ ...prev, friends: [...prev.friends, newFriend] }));
+    setSearchFriendInput('');
+    alert(lang === 'th' ? `ส่งคำขอเป็นเพื่อนไปยัง ${searchFriendInput} เรียบร้อยแล้ว!` : `Friend request sent to ${searchFriendInput}!`);
+  };
+
+  return (
+    <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
+          MULTIPLAYER <span style={{ color: '#22D3EE' }}>LOBBY</span>
+        </h1>
+        <p style={{ color: '#94A3B8', fontSize: '14px' }}>
+          {lang === 'th' ? 'สร้างห้องประลองหรือใส่รหัสห้องเพื่อพิมพ์ดวลแข่งกันแบบเรียลไทม์' : 'Form rooms, invite companions from your network, or enter a match code to duel.'}
+        </p>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        {/* Left: Active Room Lobby */}
+        <div className="glass-panel" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.roomCode}</div>
+              <div style={{ fontSize: '28px', fontWeight: 900, color: '#22D3EE', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span>{createdRoomCode}</span>
+                <button 
+                  onClick={() => { navigator.clipboard.writeText(createdRoomCode); alert(lang === 'th' ? "คัดลอกรหัสห้องแล้ว!" : "Room code copied!"); }}
+                  style={{ background: 'transparent', border: 'none', color: '#7C3AED' }}
+                >
+                  <Copy size={18} />
+                </button>
+              </div>
+            </div>
+
+            <button onClick={generateRoom} className="btn-cyber-outline" style={{ fontSize: '12px' }}>
+              {t.createRoom}
+            </button>
+          </div>
+
+          {/* Lobby Players List */}
+          <div style={{ marginBottom: '24px' }}>
+            <h4 style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '12px' }}>{t.lobbyPlayers} ({roomPlayers.length}/4)</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {roomPlayers.map(rp => (
+                <div key={rp.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '12px 16px', background: 'rgba(9, 11, 26, 0.6)', borderRadius: '8px',
+                  border: '1px solid rgba(124, 58, 237, 0.3)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ fontSize: '24px' }}>🛡️</div>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: '#F8FAFC' }}>
+                        {rp.username} {rp.isHost && <span style={{ color: '#22D3EE', fontSize: '11px' }}>(HOST)</span>}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>Lv.{rp.level}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    {rp.ready ? (
+                      <span style={{ color: '#22D3EE', fontSize: '12px', fontWeight: 'bold' }}>✓ {t.ready}</span>
+                    ) : (
+                      <span style={{ color: '#94A3B8', fontSize: '12px' }}>{t.notReady}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={toggleReady} className="btn-cyber-outline" style={{ flex: 1 }}>
+              Toggle Ready
+            </button>
+            <button 
+              onClick={() => onLaunchGame({ code: createdRoomCode, players: roomPlayers })}
+              className="btn-cyber-primary" 
+              style={{ flex: 1 }}
+            >
+              <Play size={16} />
+              <span>{t.startMatch}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right: Join Room & Friend Network */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="glass-panel" style={{ padding: '20px' }}>
+            <h4 style={{ fontSize: '15px', color: '#22D3EE', marginBottom: '10px' }}>{t.joinRoom}</h4>
+            <form onSubmit={joinRoom} style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                type="text"
+                value={joinCodeInput}
+                onChange={e => setJoinCodeInput(e.target.value)}
+                placeholder="Code e.g. X7KM92"
+                style={{
+                  flex: 1, padding: '8px 12px', background: 'rgba(9, 11, 26, 0.7)',
+                  border: '1px solid #7C3AED', borderRadius: '6px', color: '#fff', fontSize: '13px'
+                }}
+              />
+              <button type="submit" className="btn-cyber-primary" style={{ padding: '8px 14px', fontSize: '12px' }}>
+                Join
+              </button>
+            </form>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '20px', flex: 1 }}>
+            <h4 style={{ fontSize: '15px', marginBottom: '12px' }}>{t.friendNetwork}</h4>
+            <form onSubmit={handleAddFriend} style={{ display: 'flex', gap: '6px', marginBottom: '16px' }}>
+              <input 
+                type="text"
+                value={searchFriendInput}
+                onChange={e => setSearchFriendInput(e.target.value)}
+                placeholder="Username / ID..."
+                style={{
+                  flex: 1, padding: '8px 10px', background: 'rgba(9, 11, 26, 0.7)',
+                  border: '1px solid rgba(124, 58, 237, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '12px'
+                }}
+              />
+              <button type="submit" className="btn-cyber-magic" style={{ padding: '8px 12px', fontSize: '12px' }}>
+                {t.addFriend}
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto' }}>
+              {player.friends.map(f => (
+                <div key={f.id} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '8px 10px', background: 'rgba(9, 11, 26, 0.5)', borderRadius: '6px', fontSize: '12px'
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#F8FAFC' }}>{f.name}</div>
+                    <div style={{ fontSize: '10px', color: f.status === 'online' ? '#22D3EE' : '#94A3B8' }}>
+                      ● {f.status} ({f.wpm} WPM)
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => alert(`Invite sent to ${f.name}!`)}
+                    className="btn-cyber-outline" 
+                    style={{ padding: '4px 8px', fontSize: '11px' }}
+                  >
+                    {t.invite}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 6. ADAPTIVE LAB
+// ==========================================
+function AdaptiveLabView({ t, lang, player }) {
   const errorEntries = Object.entries(player.keyErrors || {}).sort((a, b) => b[1] - a[1]);
 
   return (
@@ -1416,7 +1535,7 @@ function AdaptiveLabView({ player }) {
           ADAPTIVE <span style={{ color: '#22D3EE' }}>NEURAL LAB</span>
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>
-          Diagnostic telemetry detecting individual letter mistypes and synthesizing custom combat decks.
+          {lang === 'th' ? 'ระบบตรวจจับปุ่มที่พิมพ์ผิดบ่อย และสร้างแบบฝึกหัดคำปรับแต่งเฉพาะบุคคล' : 'Diagnostic telemetry detecting individual letter mistypes and synthesizing custom combat decks.'}
         </p>
       </div>
 
@@ -1441,10 +1560,10 @@ function AdaptiveLabView({ player }) {
         <div className="glass-panel" style={{ padding: '24px' }}>
           <h3 style={{ fontSize: '18px', color: '#7C3AED', marginBottom: '16px' }}>TARGETED VOCABULARY</h3>
           <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '16px' }}>
-            Combat decks automatically inject additional words containing your weak keys to accelerate muscle memory.
+            Combat sequences inject custom keywords to reinforce weak fingers.
           </p>
           <div style={{ background: 'rgba(9, 11, 26, 0.6)', padding: '12px', borderRadius: '6px', borderLeft: '3px solid #22D3EE', fontSize: '12px' }}>
-            <strong>Active Injections:</strong> <code>teleportation, superconductor, quantum, singularity</code>
+            <strong>Active Injections:</strong> <code>quantum, crystal, teleportation, singularity</code>
           </div>
         </div>
       </div>
@@ -1455,12 +1574,12 @@ function AdaptiveLabView({ player }) {
 // ==========================================
 // 7. LEADERBOARD VIEW
 // ==========================================
-function LeaderboardView() {
+function LeaderboardView({ t }) {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
-          GLOBAL <span style={{ color: '#22D3EE' }}>RANKINGS</span>
+          {t.weeklyRankings}
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>Top operatives synchronized across Cloud Firestore.</p>
       </div>
@@ -1498,12 +1617,12 @@ function LeaderboardView() {
 // ==========================================
 // 8. STATS VIEW
 // ==========================================
-function StatsView({ player }) {
+function StatsView({ t, player }) {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
-          COMBAT <span style={{ color: '#22D3EE' }}>DOSSIER</span>
+          {t.lifetimeStats}
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>Lifetime metrics and persistent neural achievements.</p>
       </div>
@@ -1533,7 +1652,7 @@ function StatsView({ player }) {
 // ==========================================
 // 9. MISSIONS VIEW
 // ==========================================
-function MissionsView({ missions, setMissions, gainXp }) {
+function MissionsView({ t, lang, missions, setMissions, gainXp }) {
   const claimReward = (mission) => {
     if (!mission.completed) return;
     gainXp(mission.rewardXP);
@@ -1545,7 +1664,7 @@ function MissionsView({ missions, setMissions, gainXp }) {
     <div style={{ maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
-          DAILY <span style={{ color: '#22D3EE' }}>BOUNTIES</span>
+          {t.dailyBounties}
         </h1>
         <p style={{ color: '#94A3B8', fontSize: '14px' }}>Complete neural challenges to earn bonus XP and rank prestige.</p>
       </div>
@@ -1557,8 +1676,12 @@ function MissionsView({ missions, setMissions, gainXp }) {
             border: m.completed ? '1px solid #22D3EE' : '1px solid rgba(124, 58, 237, 0.3)'
           }}>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#F8FAFC' }}>{m.title}</div>
-              <div style={{ fontSize: '13px', color: '#94A3B8', margin: '4px 0 8px 0' }}>{m.desc}</div>
+              <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#F8FAFC' }}>
+                {lang === 'th' ? m.titleTh : m.title}
+              </div>
+              <div style={{ fontSize: '13px', color: '#94A3B8', margin: '4px 0 8px 0' }}>
+                {lang === 'th' ? m.descTh : m.desc}
+              </div>
               <div style={{ fontSize: '12px', color: '#22D3EE' }}>Reward: +{m.rewardXP} XP</div>
             </div>
             <button
@@ -1567,10 +1690,94 @@ function MissionsView({ missions, setMissions, gainXp }) {
               className={m.completed ? "btn-cyber-primary" : "btn-cyber-outline"}
               style={{ opacity: m.completed ? 1 : 0.5 }}
             >
-              {m.completed ? 'CLAIM REWARD' : 'IN PROGRESS'}
+              {m.completed ? t.claimReward : t.inProgress}
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 10. SETTINGS VIEW (Language & Typing Mode)
+// ==========================================
+function SettingsView({ t, lang, setLang, typingMode, setTypingMode }) {
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 900, marginBottom: '8px' }}>
+          SYSTEM <span style={{ color: '#22D3EE' }}>SETTINGS</span>
+        </h1>
+        <p style={{ color: '#94A3B8', fontSize: '14px' }}>
+          Configure user interface language and keyboard combat preferences.
+        </p>
+      </div>
+
+      <div className="glass-panel" style={{ padding: '28px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+        {/* Language Selection */}
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#22D3EE', marginBottom: '12px' }}>
+            {t.languageSetting}
+          </h3>
+          <div style={{ display: 'flex', gap: '14px' }}>
+            <button
+              onClick={() => setLang('th')}
+              className={lang === 'th' ? "btn-cyber-primary" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              🇹🇭 ภาษาไทย (Thai)
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={lang === 'en' ? "btn-cyber-primary" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              🇬🇧 English
+            </button>
+          </div>
+        </div>
+
+        {/* Typing Battle Mode (English / Thai / Mixed) */}
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#7C3AED', marginBottom: '12px' }}>
+            {t.typingTrainingMode}
+          </h3>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => setTypingMode('en')}
+              className={typingMode === 'en' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langEn}
+            </button>
+            <button
+              onClick={() => setTypingMode('th')}
+              className={typingMode === 'th' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langTh}
+            </button>
+            <button
+              onClick={() => setTypingMode('mix')}
+              className={typingMode === 'mix' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langMix}
+            </button>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(9, 11, 26, 0.6)',
+          padding: '14px',
+          borderRadius: '8px',
+          borderLeft: '3px solid #22D3EE',
+          fontSize: '13px',
+          color: '#94A3B8'
+        }}>
+          💡 <strong>Tip:</strong> Choices are automatically saved to your operative profile and persistent across all devices.
+        </div>
       </div>
     </div>
   );

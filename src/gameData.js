@@ -1,8 +1,9 @@
-// Game Data: Classes, Worlds, Enemies, Missions
+// Game Data: Classes, Worlds, High-HP Balanced Monsters, Missions
 export const CHARACTER_CLASSES = [
   {
     id: 'cyber-mage',
     name: 'Cyber Mage',
+    nameTh: 'ไซเบอร์ เมจ',
     icon: '🔮',
     tagline: 'Arcane Code Weaver',
     desc: 'Channels high-frequency neon glyphs. Devastating burst damage on long words.',
@@ -14,6 +15,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'void-hunter',
     name: 'Void Hunter',
+    nameTh: 'วอยด์ ฮันเตอร์',
     icon: '🌌',
     tagline: 'Dimensional Assassin',
     desc: 'Manipulates dark matter and phase shifts. Rewarded heavily for precision.',
@@ -25,6 +27,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'tech-knight',
     name: 'Tech Knight',
+    nameTh: 'เทค ไนท์',
     icon: '🛡️',
     tagline: 'Fortified Mainframe Guard',
     desc: 'Heavy cyber armor with plasma barrier. Immune to combo resets on typos.',
@@ -36,6 +39,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'star-guardian',
     name: 'Star Guardian',
+    nameTh: 'สตาร์ การ์เดียน',
     icon: '✨',
     tagline: 'Cosmic Healer & Protector',
     desc: 'Draws vitality from starlight. Steadily restores HP on typing streaks.',
@@ -47,6 +51,7 @@ export const CHARACTER_CLASSES = [
   {
     id: 'quantum-witch',
     name: 'Quantum Witch',
+    nameTh: 'ควอนตัม วิทช์',
     icon: '⚡',
     tagline: 'Tachyon Overclocker',
     desc: 'Bends space-time continuum. Accelerates attack speed and combo velocity.',
@@ -57,95 +62,106 @@ export const CHARACTER_CLASSES = [
   }
 ];
 
+// Balanced High-HP Worlds with Distinct Monster Designs:
+// Normal: 800 - 1,500 HP
+// Elite: 2,500 - 4,500 HP
+// Mini Boss: 6,000 - 9,500 HP
+// Boss: 16,000+ HP
 export const WORLDS = [
   {
     id: 'world-1',
     levelReq: 1,
     name: 'Neon Academy',
+    nameTh: 'นีออน อคาเดมี',
     desc: 'High-tech training courtyard bathed in holographic neon lights.',
     bg: 'radial-gradient(ellipse at bottom, #100f2e 0%, #090B1A 100%)',
-    difficulty: 'Beginner',
+    difficulty: 'easy',
     wordTier: 'beginner',
     enemies: [
-      { name: 'Training Drone V1', hp: 140, maxHp: 140, attackPower: 8, sprite: '🤖', speedSec: 8 },
-      { name: 'Glitch Scout', hp: 200, maxHp: 200, attackPower: 12, sprite: '👾', speedSec: 7 },
-      { name: 'Holo-Gargoyle', hp: 320, maxHp: 320, attackPower: 15, sprite: '🗿', speedSec: 6.5, isBoss: true }
+      { id: 'void-beast', name: 'Void Drone Beast', nameTh: 'อสูรโดรนวอยด์', hp: 1200, maxHp: 1200, attackPower: 8, speedSec: 7 },
+      { id: 'mutant-spider', name: 'Mutant Cyber Spider', nameTh: 'แมงมุมไซเบอร์กลายพันธุ์', hp: 3200, maxHp: 3200, attackPower: 12, speedSec: 6.5, isElite: true },
+      { id: 'crystal-golem', name: 'Holo Crystal Golem', nameTh: 'โกเลมคริสตัลโฮโล', hp: 6500, maxHp: 6500, attackPower: 15, speedSec: 6, isBoss: true }
     ]
   },
   {
     id: 'world-2',
     levelReq: 5,
     name: 'Crystal Forest',
+    nameTh: 'ป่าคริสตัลโบราณ',
     desc: 'Bioluminescent alien woods with floating resonating mana crystals.',
     bg: 'radial-gradient(ellipse at bottom, #15103a 0%, #090B1A 100%)',
-    difficulty: 'Intermediate',
+    difficulty: 'normal',
     wordTier: 'intermediate',
     enemies: [
-      { name: 'Prism Sprite', hp: 280, maxHp: 280, attackPower: 14, sprite: '💎', speedSec: 6.5 },
-      { name: 'Crystal Stalker', hp: 380, maxHp: 380, attackPower: 18, sprite: '🐆', speedSec: 5.8 },
-      { name: 'Emerald Archon', hp: 550, maxHp: 550, attackPower: 22, sprite: '🐉', speedSec: 5.2, isBoss: true }
+      { id: 'mutant-spider', name: 'Prism Arachnid', nameTh: 'แมงมุมปริซึมแสง', hp: 1800, maxHp: 1800, attackPower: 12, speedSec: 6.5 },
+      { id: 'shadow-reaper', name: 'Shadow Reaper', nameTh: 'ยมทูตเงาสังหาร', hp: 4500, maxHp: 4500, attackPower: 18, speedSec: 5.8, isElite: true },
+      { id: 'crystal-golem', name: 'Emerald Archon Golem', nameTh: 'มหาโกเลมมรกต', hp: 9500, maxHp: 9500, attackPower: 22, speedSec: 5.2, isBoss: true }
     ]
   },
   {
     id: 'world-3',
     levelReq: 10,
     name: 'Cyber Dungeon',
+    nameTh: 'คุกใต้ดินไซเบอร์',
     desc: 'Subterranean mainframe overrun by corrupted rogue algorithms.',
     bg: 'radial-gradient(ellipse at bottom, #1d0f3f 0%, #090B1A 100%)',
-    difficulty: 'Advanced',
-    wordTier: 'advanced',
+    difficulty: 'normal',
+    wordTier: 'intermediate',
     enemies: [
-      { name: 'Malware Spore', hp: 420, maxHp: 420, attackPower: 20, sprite: '🦠', speedSec: 5.5 },
-      { name: 'Firewall Sentinel', hp: 580, maxHp: 580, attackPower: 26, sprite: '🛡️', speedSec: 5.0 },
-      { name: 'Zero-Day Leviathan', hp: 800, maxHp: 800, attackPower: 30, sprite: '🐙', speedSec: 4.5, isBoss: true }
+      { id: 'void-beast', name: 'Malware Spore Beast', nameTh: 'อสูรสปอร์มัลแวร์', hp: 2500, maxHp: 2500, attackPower: 16, speedSec: 5.5 },
+      { id: 'plasma-wraith', name: 'Plasma Wraith', nameTh: 'ภูตพลาสม่าคลั่ง', hp: 5500, maxHp: 5500, attackPower: 22, speedSec: 5.0, isElite: true },
+      { id: 'abyss-dragon', name: 'Zero-Day Abyss Dragon', nameTh: 'มังกรห้วงลึกซีโร่เดย์', hp: 16500, maxHp: 16500, attackPower: 28, speedSec: 4.8, isBoss: true }
     ]
   },
   {
     id: 'world-4',
     levelReq: 20,
     name: 'Quantum City',
+    nameTh: 'มหานครควอนตัม',
     desc: 'Metropolis pulsating with tachyon particle fountains and hover-skiffs.',
     bg: 'radial-gradient(ellipse at bottom, #23124d 0%, #090B1A 100%)',
-    difficulty: 'Expert',
+    difficulty: 'hard',
     wordTier: 'advanced',
     enemies: [
-      { name: 'Tachyon Enforcer', hp: 600, maxHp: 600, attackPower: 25, sprite: '🛸', speedSec: 4.8 },
-      { name: 'Cybernetic Wyrm', hp: 750, maxHp: 750, attackPower: 32, sprite: '🐍', speedSec: 4.2 },
-      { name: 'Nexus Overmind', hp: 1100, maxHp: 1100, attackPower: 38, sprite: '👁️', speedSec: 3.8, isBoss: true }
+      { id: 'shadow-reaper', name: 'Tachyon Reaper', nameTh: 'ผู้ล่าแทคยอนมิติ', hp: 3500, maxHp: 3500, attackPower: 20, speedSec: 5.0 },
+      { id: 'plasma-wraith', name: 'Cybernetic Overlord', nameTh: 'ราชาไซเบอร์เนติกส์', hp: 7500, maxHp: 7500, attackPower: 26, speedSec: 4.5, isElite: true },
+      { id: 'abyss-dragon', name: 'Nexus Void Dragon', nameTh: 'มังกรวอยด์แห่งเน็กซัส', hp: 22000, maxHp: 22000, attackPower: 32, speedSec: 4.2, isBoss: true }
     ]
   },
   {
     id: 'world-5',
     levelReq: 30,
     name: 'Void Station',
+    nameTh: 'สถานีอวกาศแห่งความว่างเปล่า',
     desc: 'Derelict orbital fortress near an unstable event horizon.',
     bg: 'radial-gradient(ellipse at bottom, #260a48 0%, #090B1A 100%)',
-    difficulty: 'Master',
+    difficulty: 'hard',
     wordTier: 'expert',
     enemies: [
-      { name: 'Void Phantom', hp: 800, maxHp: 800, attackPower: 34, sprite: '👻', speedSec: 4.0 },
-      { name: 'Eclipse Titan', hp: 1400, maxHp: 1400, attackPower: 45, sprite: '🪐', speedSec: 3.5, isBoss: true }
+      { id: 'void-beast', name: 'Abyssal Colossus', nameTh: 'ยักษ์อสูรห้วงลึก', hp: 5000, maxHp: 5000, attackPower: 26, speedSec: 4.5 },
+      { id: 'abyss-dragon', name: 'Event Horizon Dragon', nameTh: 'มังกรขอบฟ้าหลุมดำ', hp: 30000, maxHp: 30000, attackPower: 40, speedSec: 3.8, isBoss: true }
     ]
   },
   {
     id: 'world-6',
     levelReq: 50,
     name: 'The Singularity',
+    nameTh: 'เดอะ ซิงกูลาริตี้ (จุดกำเนิดมิติ)',
     desc: 'The primordial core of cyber-arcana where space and digital code collapse.',
     bg: 'radial-gradient(ellipse at bottom, #2e0854 0%, #090B1A 100%)',
-    difficulty: 'Grandmaster',
+    difficulty: 'hard',
     wordTier: 'expert',
     enemies: [
-      { name: 'Chronos Prime', hp: 2000, maxHp: 2000, attackPower: 55, sprite: '⏳', speedSec: 3.2, isBoss: true }
+      { id: 'abyss-dragon', name: 'Chronos Prime Titan', nameTh: 'จอมราชันกาลเวลา โครนอส ไพรม์', hp: 50000, maxHp: 50000, attackPower: 48, speedSec: 3.5, isBoss: true }
     ]
   }
 ];
 
 export const INITIAL_DAILY_MISSIONS = [
-  { id: 'm1', title: 'Power Surge', desc: 'Type 250 words across all battles', target: 250, current: 65, rewardXP: 300, rewardTitle: 'Fast Finger', completed: false },
-  { id: 'm2', title: 'Hyper Focus', desc: 'Maintain 95% Accuracy in any battle', target: 95, current: 0, rewardXP: 450, rewardTitle: 'Deadeye', completed: false },
-  { id: 'm3', title: 'Combo Master', desc: 'Reach a 20x Combo streak in one fight', target: 20, current: 12, rewardXP: 500, rewardTitle: 'Rhythm Archon', completed: false },
-  { id: 'm4', title: 'Dungeon Conqueror', desc: 'Defeat 5 cyber enemies', target: 5, current: 2, rewardXP: 350, rewardTitle: 'Glitch Slayer', completed: false }
+  { id: 'm1', title: 'Power Surge', titleTh: 'คลื่นพลังงานสังหาร', desc: 'Type 250 words across all battles', descTh: 'พิมพ์ให้ครบ 250 คำในการต่อสู้ทั้งหมด', target: 250, current: 65, rewardXP: 300, completed: false },
+  { id: 'm2', title: 'Hyper Focus', titleTh: 'สมาธิอันเฉียบคม', desc: 'Maintain 95% Accuracy in any battle', descTh: 'รักษาความแม่นยำ 95% ขึ้นไปในด่านใดก็ได้', target: 95, current: 0, rewardXP: 450, completed: false },
+  { id: 'm3', title: 'Combo Master', titleTh: 'ปรมาจารย์คอมโบ', desc: 'Reach a 20x Combo streak in one fight', descTh: 'ทำคอมโบต่อเนื่อง 20 ครั้งขึ้นไปในการต่อสู้เดียว', target: 20, current: 12, rewardXP: 500, completed: false },
+  { id: 'm4', title: 'Dungeon Conqueror', titleTh: 'ผู้พิชิตดันเจี้ยน', desc: 'Defeat 5 cyber enemies', descTh: 'กำจัดมอนสเตอร์ไซเบอร์ให้ครบ 5 ตัว', target: 5, current: 2, rewardXP: 350, completed: false }
 ];
 
 export const INITIAL_LEADERBOARD = [
