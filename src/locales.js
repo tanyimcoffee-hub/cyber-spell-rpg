@@ -73,7 +73,7 @@ export const TRANSLATIONS = {
     sectorsAtlas: "แผนที่ด่านโลกไซเบอร์",
     navHome: "หน้าแรก",
     navHeroes: "ฮีโร่",
-    navBattle: "ลานต่อสู้",
+    navBattle: "Battle (ลานต่อสู้)",
     navWorlds: "แผนที่ด่าน",
     navMultiplayer: "เล่นหลายคน",
     navTraining: "ห้องฝึกวิเคราะห์",
