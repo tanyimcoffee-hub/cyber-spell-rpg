@@ -995,7 +995,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
           <span style={{ fontSize: '20px' }}>🌍</span>
           <div>
             <div style={{ fontSize: '15px', fontWeight: 800, color: '#F8FAFC' }}>
-              {lang === 'th' ? currentWorld.nameTh : currentWorld.name} (Wave {enemyIndex + 1}/{world.enemies.length})
+              {lang === 'th' ? world.nameTh : world.name} (Wave {enemyIndex + 1}/{world.enemies.length})
             </div>
             <div style={{ fontSize: '11px', color: '#94A3B8' }}>
               Mode: <strong style={{ color: '#22D3EE' }}>{typingMode.toUpperCase()}</strong> | Difficulty: {world.difficulty.toUpperCase()}
