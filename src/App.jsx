@@ -211,12 +211,11 @@ export default function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Navigation Bar: Strict 3-Color Theme (#090B1A, #7C3AED, #22D3EE) */}
+    <div className="app-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <header style={{
         background: 'rgba(9, 11, 26, 0.94)',
         backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(124, 58, 237, 0.35)',
+        borderBottom: '1px solid rgba(19, 184, 232, 0.35)',
         padding: '12px 24px',
         display: 'flex',
         alignItems: 'center',
@@ -224,9 +223,10 @@ export default function App() {
         position: 'sticky',
         top: 0,
         zIndex: 50
-      }}>
+      }} className="app-header">
         {/* Brand Logo */}
         <div 
+          className="app-brand"
           onClick={() => setActiveTab('home')}
           style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
         >
@@ -234,13 +234,13 @@ export default function App() {
             width: '40px',
             height: '40px',
             borderRadius: '8px',
-            background: 'linear-gradient(135deg, #7C3AED, #22D3EE)',
+            background: 'linear-gradient(135deg, #13B8E8, #22D3EE)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: '0 0 15px rgba(34, 211, 238, 0.4)',
             fontSize: '20px'
-          }}>
+          }} className="app-brand-mark">
             ⚡
           </div>
           <div>
@@ -260,7 +260,7 @@ export default function App() {
         </div>
 
         {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <nav className="app-nav" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {[
             { id: 'home', label: t.navHome, icon: Sparkles },
             { id: 'choose-hero', label: t.navHeroes, icon: Shield },
@@ -281,10 +281,10 @@ export default function App() {
                 onClick={() => setActiveTab(tab.id)}
                 style={{
                   background: isActive 
-                    ? (tab.highlight ? 'linear-gradient(135deg, #22D3EE, #0ea5e9)' : 'rgba(124, 58, 237, 0.25)') 
+                    ? (tab.highlight ? 'linear-gradient(135deg, #22D3EE, #0ea5e9)' : 'rgba(19, 184, 232, 0.25)')
                     : 'transparent',
                   color: isActive ? (tab.highlight ? '#090B1A' : '#22D3EE') : '#94A3B8',
-                  border: isActive ? (tab.highlight ? 'none' : '1px solid #7C3AED') : '1px solid transparent',
+                  border: isActive ? (tab.highlight ? 'none' : '1px solid #13B8E8') : '1px solid transparent',
                   padding: '7px 11px',
                   borderRadius: '6px',
                   fontSize: '13px',
@@ -309,8 +309,8 @@ export default function App() {
             onClick={() => setLang(l => l === 'th' ? 'en' : 'th')}
             title="Switch Language / เปลี่ยนภาษา"
             style={{
-              background: 'rgba(124, 58, 237, 0.2)',
-              border: '1px solid #7C3AED',
+              background: 'rgba(19, 184, 232, 0.2)',
+              border: '1px solid #13B8E8',
               borderRadius: '6px',
               padding: '6px 10px',
               fontSize: '12px',
@@ -348,7 +348,7 @@ export default function App() {
                   alignItems: 'center',
                   gap: '8px',
                   background: 'rgba(16, 20, 40, 0.8)',
-                  border: '1px solid #7C3AED',
+                  border: '1px solid #13B8E8',
                   borderRadius: '6px',
                   padding: '4px 10px',
                   cursor: 'pointer'
@@ -367,7 +367,7 @@ export default function App() {
                 title={t.signOut}
                 style={{
                   background: 'transparent',
-                  border: '1px solid rgba(124, 58, 237, 0.4)',
+                  border: '1px solid rgba(19, 184, 232, 0.4)',
                   borderRadius: '6px',
                   padding: '6px 8px',
                   color: '#94A3B8'
@@ -390,7 +390,7 @@ export default function App() {
       </header>
 
       {/* Main Content View Switcher */}
-      <main style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column' }}>
+      <main className="app-main" style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column' }}>
         {activeTab === 'home' && (
           <HomeView 
             t={t}
@@ -514,7 +514,7 @@ export default function App() {
                 width: '100%',
                 padding: '12px',
                 background: 'rgba(9, 11, 26, 0.8)',
-                border: '1px solid #7C3AED',
+                border: '1px solid #13B8E8',
                 borderRadius: '6px',
                 color: '#fff',
                 fontSize: '15px',
@@ -537,7 +537,7 @@ export default function App() {
       {/* Strict 3-Color Footer */}
       <footer style={{
         padding: '14px 24px',
-        borderTop: '1px solid rgba(124, 58, 237, 0.25)',
+        borderTop: '1px solid rgba(19, 184, 232, 0.25)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -550,7 +550,7 @@ export default function App() {
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
           <span>Lang: <strong style={{ color: '#22D3EE' }}>{lang.toUpperCase()}</strong></span>
-          <span>Training: <strong style={{ color: '#7C3AED' }}>{typingMode.toUpperCase()}</strong></span>
+          <span>Training: <strong style={{ color: '#13B8E8' }}>{typingMode.toUpperCase()}</strong></span>
         </div>
       </footer>
     </div>
@@ -564,21 +564,21 @@ function HomeView({ t, lang, player, onStartBattle, onChooseHero, onOpenWorlds }
   const currentClass = CHARACTER_CLASSES.find(c => c.id === player.classId) || CHARACTER_CLASSES[0];
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
-      <div className="glass-panel" style={{
+    <div className="home-view" style={{ maxWidth: '1100px', margin: '0 auto', width: '100%' }}>
+      <div className="glass-panel home-hero" style={{
         padding: '44px',
         marginBottom: '32px',
         position: 'relative',
         overflow: 'hidden',
-        border: '1px solid rgba(124, 58, 237, 0.4)'
+        border: '1px solid rgba(19, 184, 232, 0.4)'
       }}>
         <div style={{ maxWidth: '680px', position: 'relative', zIndex: 2 }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(124, 58, 237, 0.15)',
-            border: '1px solid #7C3AED',
+            background: 'rgba(19, 184, 232, 0.15)',
+            border: '1px solid #13B8E8',
             padding: '4px 12px',
             borderRadius: '20px',
             fontSize: '11px',
@@ -622,10 +622,10 @@ function HomeView({ t, lang, player, onStartBattle, onChooseHero, onOpenWorlds }
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{
             fontSize: '44px',
-            background: 'rgba(124, 58, 237, 0.2)',
+            background: 'rgba(19, 184, 232, 0.2)',
             padding: '16px',
             borderRadius: '12px',
-            border: '1px solid #7C3AED'
+            border: '1px solid #13B8E8'
           }}>
             {currentClass.icon}
           </div>
@@ -682,7 +682,7 @@ function ChooseHeroView({ t, lang, player, setPlayer, onHeroSelected }) {
               className="glass-panel"
               style={{
                 padding: '24px',
-                border: isSelected ? '2px solid #22D3EE' : '1px solid rgba(124, 58, 237, 0.3)',
+                border: isSelected ? '2px solid #22D3EE' : '1px solid rgba(19, 184, 232, 0.3)',
                 boxShadow: isSelected ? '0 0 24px rgba(34, 211, 238, 0.3)' : 'none',
                 position: 'relative',
                 display: 'flex',
@@ -719,7 +719,7 @@ function ChooseHeroView({ t, lang, player, setPlayer, onHeroSelected }) {
                   background: 'rgba(9, 11, 26, 0.6)',
                   padding: '10px',
                   borderRadius: '6px',
-                  borderLeft: '3px solid #7C3AED',
+                  borderLeft: '3px solid #13B8E8',
                   fontSize: '11px',
                   color: '#F8FAFC',
                   marginBottom: '20px'
@@ -989,7 +989,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
         padding: '12px 20px',
         background: 'rgba(16, 20, 40, 0.75)',
         borderRadius: '8px',
-        border: '1px solid rgba(124, 58, 237, 0.4)'
+        border: '1px solid rgba(19, 184, 232, 0.4)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '20px' }}>🌍</span>
@@ -1016,11 +1016,11 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.accuracy}</div>
-          <div style={{ fontSize: '22px', fontWeight: 900, color: currentAccuracy >= 95 ? '#22D3EE' : '#7C3AED' }}>{currentAccuracy}%</div>
+          <div style={{ fontSize: '22px', fontWeight: 900, color: currentAccuracy >= 95 ? '#22D3EE' : '#13B8E8' }}>{currentAccuracy}%</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.combo}</div>
-          <div style={{ fontSize: '22px', fontWeight: 900, color: '#7C3AED' }}>{combo}x</div>
+          <div style={{ fontSize: '22px', fontWeight: 900, color: '#13B8E8' }}>{combo}x</div>
         </div>
         <div className="glass-panel" style={{ padding: '10px', textAlign: 'center' }}>
           <div style={{ fontSize: '11px', color: '#94A3B8' }}>{t.damage}</div>
@@ -1042,8 +1042,8 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
         justifyContent: 'space-between',
         position: 'relative',
         background: world.bg,
-        border: '1px solid rgba(124, 58, 237, 0.4)',
-        boxShadow: '0 0 30px rgba(124, 58, 237, 0.15)'
+        border: '1px solid rgba(19, 184, 232, 0.4)',
+        boxShadow: '0 0 30px rgba(19, 184, 232, 0.15)'
       }}>
         {/* Monster HP and Hand-crafted Illustration */}
         <div style={{ width: '100%', maxWidth: '620px', textAlign: 'center' }}>
@@ -1059,12 +1059,12 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
 
           <div style={{
             width: '100%', height: '12px', background: 'rgba(0,0,0,0.6)', borderRadius: '6px', overflow: 'hidden',
-            border: '1px solid rgba(124, 58, 237, 0.4)', marginBottom: '16px'
+            border: '1px solid rgba(19, 184, 232, 0.4)', marginBottom: '16px'
           }}>
             <div style={{
               width: `${Math.max(0, (enemyHp / enemyMaxHp) * 100)}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #7C3AED, #22D3EE)',
+              background: 'linear-gradient(90deg, #13B8E8, #22D3EE)',
               transition: 'width 0.2s ease-out'
             }} />
           </div>
@@ -1081,7 +1081,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
               <div key={d.id} style={{
                 position: 'absolute', top: '-24px', right: '-24px',
                 color: '#22D3EE', fontSize: d.isBurst ? '28px' : '22px', fontWeight: 900,
-                fontFamily: 'Orbitron', textShadow: '0 0 12px #7C3AED'
+                fontFamily: 'Orbitron', textShadow: '0 0 12px #13B8E8'
               }}>
                 -{d.dmg} {d.isBurst && 'BURST!'}
               </div>
@@ -1122,10 +1122,10 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
                     borderRadius: '6px',
                     background: isCurrent 
                       ? 'rgba(34, 211, 238, 0.2)' 
-                      : (isDone ? 'rgba(124, 58, 237, 0.3)' : 'rgba(9, 11, 26, 0.6)'),
+                      : (isDone ? 'rgba(19, 184, 232, 0.3)' : 'rgba(9, 11, 26, 0.6)'),
                     border: isCurrent 
                       ? '2px solid #22D3EE' 
-                      : (isDone ? '1px solid #7C3AED' : '1px solid rgba(255,255,255,0.1)'),
+                      : (isDone ? '1px solid #13B8E8' : '1px solid rgba(255,255,255,0.1)'),
                     color: isCurrent ? '#22D3EE' : (isDone ? '#94A3B8' : '#64748B'),
                     fontWeight: isCurrent ? 800 : 500,
                     fontSize: isCurrent ? '16px' : '13px',
@@ -1136,7 +1136,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
                     {word}
                   </div>
                   {idx < currentSequence.length - 1 && (
-                    <span style={{ color: '#7C3AED', fontSize: '14px' }}>→</span>
+                    <span style={{ color: '#13B8E8', fontSize: '14px' }}>→</span>
                   )}
                 </div>
               );
@@ -1152,8 +1152,8 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
             background: '#090B1A',
             padding: '14px 24px',
             borderRadius: '10px',
-            border: '2px solid #7C3AED',
-            boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
+            border: '2px solid #13B8E8',
+            boxShadow: '0 0 20px rgba(19, 184, 232, 0.3)',
             display: 'inline-block'
           }}>
             {activeTargetWord.split('').map((char, idx) => {
@@ -1213,7 +1213,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
             <div style={{
               width: `${Math.max(0, (playerHp / playerMaxHp) * 100)}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #22D3EE, #7C3AED)',
+              background: 'linear-gradient(90deg, #22D3EE, #13B8E8)',
               transition: 'width 0.2s ease-out'
             }} />
           </div>
@@ -1231,7 +1231,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
             <div style={{ fontSize: '42px', marginBottom: '8px' }}>
               {battleOver === 'victory' ? '🏆' : '💀'}
             </div>
-            <h2 style={{ fontSize: '26px', color: battleOver === 'victory' ? '#22D3EE' : '#7C3AED', marginBottom: '12px' }}>
+            <h2 style={{ fontSize: '26px', color: battleOver === 'victory' ? '#22D3EE' : '#13B8E8', marginBottom: '12px' }}>
               {battleOver === 'victory' ? t.missionComplete : t.systemOverheat}
             </h2>
             <div style={{
@@ -1241,7 +1241,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
             }}>
               <div>Speed: <strong style={{ color: '#22D3EE' }}>{currentWpm} WPM</strong></div>
               <div>Accuracy: <strong style={{ color: '#22D3EE' }}>{currentAccuracy}%</strong></div>
-              <div>Max Combo: <strong style={{ color: '#7C3AED' }}>{maxCombo}x</strong></div>
+              <div>Max Combo: <strong style={{ color: '#13B8E8' }}>{maxCombo}x</strong></div>
               <div>Damage: <strong style={{ color: '#fff' }}>{totalDamageDealt}</strong></div>
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -1289,7 +1289,7 @@ function WorldMapView({ t, lang, player, selectedWorld, onSelectWorld }) {
               {!isUnlocked && (
                 <div style={{
                   position: 'absolute', top: '12px', right: '12px',
-                  background: 'rgba(124, 58, 237, 0.25)', border: '1px solid #7C3AED',
+                  background: 'rgba(19, 184, 232, 0.25)', border: '1px solid #13B8E8',
                   color: '#22D3EE', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold'
                 }}>
                   LOCKED (REQ LV.{w.levelReq})
@@ -1395,7 +1395,7 @@ function MultiplayerLobbyView({ t, lang, player, setPlayer, onLaunchGame }) {
                 <span>{createdRoomCode}</span>
                 <button 
                   onClick={() => { navigator.clipboard.writeText(createdRoomCode); alert(lang === 'th' ? "คัดลอกรหัสห้องแล้ว!" : "Room code copied!"); }}
-                  style={{ background: 'transparent', border: 'none', color: '#7C3AED' }}
+                  style={{ background: 'transparent', border: 'none', color: '#13B8E8' }}
                 >
                   <Copy size={18} />
                 </button>
@@ -1415,7 +1415,7 @@ function MultiplayerLobbyView({ t, lang, player, setPlayer, onLaunchGame }) {
                 <div key={rp.id} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '12px 16px', background: 'rgba(9, 11, 26, 0.6)', borderRadius: '8px',
-                  border: '1px solid rgba(124, 58, 237, 0.3)'
+                  border: '1px solid rgba(19, 184, 232, 0.3)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{ fontSize: '24px' }}>🛡️</div>
@@ -1466,7 +1466,7 @@ function MultiplayerLobbyView({ t, lang, player, setPlayer, onLaunchGame }) {
                 placeholder="Code e.g. X7KM92"
                 style={{
                   flex: 1, padding: '8px 12px', background: 'rgba(9, 11, 26, 0.7)',
-                  border: '1px solid #7C3AED', borderRadius: '6px', color: '#fff', fontSize: '13px'
+                  border: '1px solid #13B8E8', borderRadius: '6px', color: '#fff', fontSize: '13px'
                 }}
               />
               <button type="submit" className="btn-cyber-primary" style={{ padding: '8px 14px', fontSize: '12px' }}>
@@ -1485,7 +1485,7 @@ function MultiplayerLobbyView({ t, lang, player, setPlayer, onLaunchGame }) {
                 placeholder="Username / ID..."
                 style={{
                   flex: 1, padding: '8px 10px', background: 'rgba(9, 11, 26, 0.7)',
-                  border: '1px solid rgba(124, 58, 237, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '12px'
+                  border: '1px solid rgba(19, 184, 232, 0.4)', borderRadius: '6px', color: '#fff', fontSize: '12px'
                 }}
               />
               <button type="submit" className="btn-cyber-magic" style={{ padding: '8px 12px', fontSize: '12px' }}>
@@ -1547,10 +1547,10 @@ function AdaptiveLabView({ t, lang, player }) {
               <div key={key}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginBottom: '4px' }}>
                   <span style={{ fontFamily: 'JetBrains Mono', fontWeight: 'bold' }}>Key [{key.toUpperCase()}]</span>
-                  <span style={{ color: '#7C3AED' }}>{count} errors</span>
+                  <span style={{ color: '#13B8E8' }}>{count} errors</span>
                 </div>
                 <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px' }}>
-                  <div style={{ width: `${Math.min(100, count * 15)}%`, height: '100%', background: '#7C3AED' }} />
+                  <div style={{ width: `${Math.min(100, count * 15)}%`, height: '100%', background: '#13B8E8' }} />
                 </div>
               </div>
             ))}
@@ -1558,7 +1558,7 @@ function AdaptiveLabView({ t, lang, player }) {
         </div>
 
         <div className="glass-panel" style={{ padding: '24px' }}>
-          <h3 style={{ fontSize: '18px', color: '#7C3AED', marginBottom: '16px' }}>TARGETED VOCABULARY</h3>
+          <h3 style={{ fontSize: '18px', color: '#13B8E8', marginBottom: '16px' }}>TARGETED VOCABULARY</h3>
           <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '16px' }}>
             Combat sequences inject custom keywords to reinforce weak fingers.
           </p>
@@ -1587,7 +1587,7 @@ function LeaderboardView({ t }) {
       <div className="glass-panel" style={{ overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
           <thead>
-            <tr style={{ background: 'rgba(124, 58, 237, 0.15)', color: '#22D3EE', borderBottom: '1px solid rgba(124,58,237,0.3)' }}>
+            <tr style={{ background: 'rgba(19, 184, 232, 0.15)', color: '#22D3EE', borderBottom: '1px solid rgba(124,58,237,0.3)' }}>
               <th style={{ padding: '12px 18px' }}>RANK</th>
               <th style={{ padding: '12px 18px' }}>OPERATIVE</th>
               <th style={{ padding: '12px 18px' }}>CLASS</th>
@@ -1601,7 +1601,7 @@ function LeaderboardView({ t }) {
               <tr key={item.rank} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: idx % 2 === 0 ? 'rgba(0,0,0,0.2)' : 'transparent' }}>
                 <td style={{ padding: '12px 18px', fontWeight: 900, color: idx < 3 ? '#22D3EE' : '#94A3B8' }}>#{item.rank}</td>
                 <td style={{ padding: '12px 18px', fontWeight: 'bold' }}>{item.name} <span style={{ color: '#94A3B8', fontSize: '11px' }}>{item.tag}</span></td>
-                <td style={{ padding: '12px 18px', color: '#7C3AED' }}>{item.charClass}</td>
+                <td style={{ padding: '12px 18px', color: '#13B8E8' }}>{item.charClass}</td>
                 <td style={{ padding: '12px 18px', fontWeight: 'bold' }}>{item.wpm}</td>
                 <td style={{ padding: '12px 18px', color: '#22D3EE' }}>{item.acc}%</td>
                 <td style={{ padding: '12px 18px', fontWeight: 900 }}>{item.score.toLocaleString()}</td>
@@ -1634,7 +1634,7 @@ function StatsView({ t, player }) {
         </div>
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ fontSize: '12px', color: '#94A3B8' }}>LIFETIME ACCURACY</div>
-          <div style={{ fontSize: '32px', fontWeight: 900, color: '#7C3AED' }}>{player.avgAcc}%</div>
+          <div style={{ fontSize: '32px', fontWeight: 900, color: '#13B8E8' }}>{player.avgAcc}%</div>
         </div>
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ fontSize: '12px', color: '#94A3B8' }}>TOTAL DAMAGE DEALT</div>
@@ -1673,7 +1673,7 @@ function MissionsView({ t, lang, missions, setMissions, gainXp }) {
         {missions.map(m => (
           <div key={m.id} className="glass-panel" style={{
             padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            border: m.completed ? '1px solid #22D3EE' : '1px solid rgba(124, 58, 237, 0.3)'
+            border: m.completed ? '1px solid #22D3EE' : '1px solid rgba(19, 184, 232, 0.3)'
           }}>
             <div>
               <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#F8FAFC' }}>
@@ -1740,7 +1740,7 @@ function SettingsView({ t, lang, setLang, typingMode, setTypingMode }) {
 
         {/* Typing Battle Mode (English / Thai / Mixed) */}
         <div>
-          <h3 style={{ fontSize: '16px', color: '#7C3AED', marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '16px', color: '#13B8E8', marginBottom: '12px' }}>
             {t.typingTrainingMode}
           </h3>
           <div style={{ display: 'flex', gap: '12px' }}>
