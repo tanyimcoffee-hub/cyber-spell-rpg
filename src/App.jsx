@@ -260,11 +260,11 @@ export default function App() {
         </div>
 
         {/* Navigation Tabs */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+        <nav style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           {[
             { id: 'home', label: t.navHome, icon: Sparkles },
             { id: 'choose-hero', label: t.navHeroes, icon: Shield },
-            { id: 'battle', label: `⚔️ ${t.navBattle}`, icon: Swords, highlight: true },
+            { id: 'battle', label: t.navBattle, icon: Swords, highlight: true },
             { id: 'worlds', label: t.navWorlds, icon: Map },
             { id: 'multiplayer', label: t.navMultiplayer, icon: Users },
             { id: 'training', label: t.navTraining, icon: BookOpen },
@@ -282,20 +282,20 @@ export default function App() {
                 style={{
                   background: isActive 
                     ? (tab.highlight ? 'linear-gradient(135deg, #22D3EE, #0ea5e9)' : 'rgba(124, 58, 237, 0.25)') 
-                    : (tab.highlight ? 'rgba(34, 211, 238, 0.15)' : 'transparent'),
-                  color: isActive ? (tab.highlight ? '#090B1A' : '#22D3EE') : (tab.highlight ? '#22D3EE' : '#94A3B8'),
-                  border: isActive ? (tab.highlight ? 'none' : '1px solid #7C3AED') : (tab.highlight ? '1px solid rgba(34, 211, 238, 0.4)' : '1px solid transparent'),
+                    : 'transparent',
+                  color: isActive ? (tab.highlight ? '#090B1A' : '#22D3EE') : '#94A3B8',
+                  border: isActive ? (tab.highlight ? 'none' : '1px solid #7C3AED') : '1px solid transparent',
                   padding: '7px 11px',
                   borderRadius: '6px',
                   fontSize: '13px',
-                  fontWeight: isActive || tab.highlight ? 700 : 500,
+                  fontWeight: isActive ? 700 : 500,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  boxShadow: isActive && tab.highlight ? '0 0 14px rgba(34,211,238,0.4)' : (tab.highlight ? '0 0 8px rgba(34, 211, 238, 0.2)' : 'none')
+                  boxShadow: isActive && tab.highlight ? '0 0 14px rgba(34,211,238,0.4)' : 'none'
                 }}
               >
-                {!tab.label.includes('⚔️') && <Icon size={14} />}
+                <Icon size={14} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -758,10 +758,7 @@ function BattleArena({ t, lang, typingMode, player, setPlayer, world, mode, gain
   // TYPING SEQUENCE ENGINE
   // Sequence deck generator
   const sequenceDeckRef = useRef(null);
-  const [currentSequence, setCurrentSequence] = useState(() => {
-    const deck = new SequenceDeck(typingMode, world.wordTier);
-    return deck.generateSequence(world.difficulty, currentEnemyData.isBoss);
-  });
+  const [currentSequence, setCurrentSequence] = useState([]);
   const [sequenceIndex, setSequenceIndex] = useState(0); // Which word in sequence is currently active
   const [sequenceAccumulatedDmg, setSequenceAccumulatedDmg] = useState(0);
 
@@ -1727,18 +1724,59 @@ function SettingsView({ t, lang, setLang, typingMode, setTypingMode }) {
             <button
               onClick={() => setLang('th')}
               className={lang === 'th' ? "btn-cyber-primary" : "btn-cyber-outline"}
-              style={{ flex: 1, padding: '14px', fontSize: '15px' }}
+              style={{ flex: 1, padding: '12px' }}
             >
               🇹🇭 ภาษาไทย (Thai)
             </button>
             <button
               onClick={() => setLang('en')}
               className={lang === 'en' ? "btn-cyber-primary" : "btn-cyber-outline"}
-              style={{ flex: 1, padding: '14px', fontSize: '15px' }}
+              style={{ flex: 1, padding: '12px' }}
             >
               🇬🇧 English
             </button>
           </div>
+        </div>
+
+        {/* Typing Battle Mode (English / Thai / Mixed) */}
+        <div>
+          <h3 style={{ fontSize: '16px', color: '#7C3AED', marginBottom: '12px' }}>
+            {t.typingTrainingMode}
+          </h3>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={() => setTypingMode('en')}
+              className={typingMode === 'en' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langEn}
+            </button>
+            <button
+              onClick={() => setTypingMode('th')}
+              className={typingMode === 'th' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langTh}
+            </button>
+            <button
+              onClick={() => setTypingMode('mix')}
+              className={typingMode === 'mix' ? "btn-cyber-magic" : "btn-cyber-outline"}
+              style={{ flex: 1, padding: '12px' }}
+            >
+              {t.langMix}
+            </button>
+          </div>
+        </div>
+
+        <div style={{
+          background: 'rgba(9, 11, 26, 0.6)',
+          padding: '14px',
+          borderRadius: '8px',
+          borderLeft: '3px solid #22D3EE',
+          fontSize: '13px',
+          color: '#94A3B8'
+        }}>
+          💡 <strong>Tip:</strong> Choices are automatically saved to your operative profile and persistent across all devices.
         </div>
       </div>
     </div>
